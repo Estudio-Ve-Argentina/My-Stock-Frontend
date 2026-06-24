@@ -17,7 +17,7 @@ export function DashboardView() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { products } = useProducts(user?.username);
-  const { movements } = useMovements();
+  const { movements } = useMovements(user?.userId);
 
   const stats = useMemo(() => {
     const today = movements.filter((movement) => isToday(movement.at));

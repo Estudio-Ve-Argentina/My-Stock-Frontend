@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 import { useMovements } from "@/hooks/useMovements";
 import { Spinner } from "@/components/ui/Spinner";
 import { MovementItem } from "./MovementItem";
@@ -45,7 +46,8 @@ function groupByDate(movements: Movement[]): Map<string, Movement[]> {
 
 export function HistorialView() {
   const { t, locale } = useLanguage();
-  const { movements, loading } = useMovements();
+  const { user } = useAuth();
+  const { movements, loading } = useMovements(user?.userId);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 

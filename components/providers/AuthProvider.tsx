@@ -5,12 +5,15 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
 import { decodeJwt, isTokenValid } from "@/lib/auth/jwt";
-import { logout as apiLogout } from "@/lib/api/auth";
+import { fetchMe, logout as apiLogout } from "@/lib/api/auth";
+import { isMockEnabled } from "@/lib/api/mock";
+import { registerSessionExpiredHandler } from "@/lib/api/client";
 import {
   clearAllTokens,
   readRefreshCookie,
@@ -61,6 +64,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
+  const signOutRef = useRef<() => void>(() => {});
+
+  const hydrateFromBackend = useCallback((baseUser: SessionUser) => {
+    if (isMockEnabled()) return;
+    fetchMe()
+      .then((me) => {
+        setUser((current) => {
+          if (current?.username !== baseUser.username) return current;
+          return {
+            ...current,
+            userId: me.id,
+            roles: me.roles,
+            planName: me.planName,
+            maxProducts: me.maxProducts,
+          };
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const token = readTokenCookie();
@@ -68,12 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const next = userFromToken(token);
       if (next) {
         setUser(next);
+        hydrateFromBackend(next);
       } else {
         clearAllTokens();
       }
     }
     setReady(true);
-  }, []);
+  }, [hydrateFromBackend]);
 
   const signIn = useCallback(
     (token: string, refreshToken: string, fallbackUsername?: string) => {
@@ -84,8 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       writeTokenCookie(token);
       writeRefreshCookie(refreshToken);
       setUser(next);
+      hydrateFromBackend(next);
     },
-    [],
+    [hydrateFromBackend],
   );
 
   const signOut = useCallback(() => {
@@ -97,6 +121,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     router.replace("/login");
   }, [router]);
+
+  useEffect(() => {
+    signOutRef.current = signOut;
+  }, [signOut]);
+
+  useEffect(() => {
+    registerSessionExpiredHandler(() => signOutRef.current());
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, ready, signIn, signOut }),

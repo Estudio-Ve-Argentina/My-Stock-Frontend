@@ -10,7 +10,7 @@ interface MovementsState {
   error: boolean;
 }
 
-export function useMovements() {
+export function useMovements(userId: number | null | undefined) {
   const [state, setState] = useState<MovementsState>({
     movements: [],
     loading: true,
@@ -18,8 +18,13 @@ export function useMovements() {
   });
 
   useEffect(() => {
+    if (!userId) {
+      setState({ movements: [], loading: false, error: false });
+      return;
+    }
     let active = true;
-    listMovements()
+    setState((prev) => ({ ...prev, loading: true }));
+    listMovements(userId)
       .then((movements) => {
         if (active) {
           setState({ movements, loading: false, error: false });
@@ -33,7 +38,7 @@ export function useMovements() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [userId]);
 
   return state;
 }
