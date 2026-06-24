@@ -1,4 +1,4 @@
-import type { AuthResponse } from "@/config/site.types";
+import type { AuthResponse, UserMeResponse } from "@/config/site.types";
 import { appConfig } from "@/config/app.config";
 import { apiRequest } from "./client";
 import { isMockEnabled, mockLogin, mockSignup } from "./mock";
@@ -32,9 +32,33 @@ export function signup(input: SignupInput): Promise<AuthResponse> {
   }
   return apiRequest<AuthResponse>("/auth/signup", {
     method: "POST",
-    body: { ...input, roleEnum: "USER" },
+    body: input,
     auth: false,
   });
+}
+
+export function exchangeOAuthCode(code: string): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>(`/auth/oauth2/exchange?code=${code}`, {
+    method: "POST",
+    auth: false,
+  });
+}
+
+export function refreshAccessToken(refreshToken: string): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>(`/auth/refresh?refreshToken=${encodeURIComponent(refreshToken)}`, {
+    method: "POST",
+    auth: false,
+  });
+}
+
+export function logout(refreshToken: string): Promise<void> {
+  return apiRequest<void>(`/auth/logout?refreshToken=${encodeURIComponent(refreshToken)}`, {
+    method: "POST",
+  });
+}
+
+export function fetchMe(): Promise<UserMeResponse> {
+  return apiRequest<UserMeResponse>("/auth/me");
 }
 
 export function googleLoginUrl(): string {

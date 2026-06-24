@@ -10,55 +10,63 @@ interface PlanCardProps {
   plan: Plan;
   current?: boolean;
   action?: ReactNode;
+  index?: number;
 }
 
-export function PlanCard({ plan, current = false, action }: PlanCardProps) {
+export function PlanCard({ plan, current = false, action, index = 0 }: PlanCardProps) {
   const { t } = useLanguage();
   const reduceMotion = useReducedMotion();
-  const highlighted = plan.id === "pro";
+  const highlighted = plan.id === "pro" || plan.id === "pro-annual";
+  const best = plan.id === "pro-annual";
 
   return (
     <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 32, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-60px" }}
       whileHover={reduceMotion ? undefined : { y: -8, scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 260, damping: 18 }}
-      className={`relative flex h-full flex-col gap-5 overflow-hidden rounded-2xl p-6 text-foreground ${
-        highlighted
-          ? "bg-brand-soft ring-1 ring-brand/30 shadow-[0_24px_60px_-28px_rgba(22,163,74,0.5)]"
-          : "border border-border bg-surface"
+      transition={{ type: "spring", stiffness: 260, damping: 18, delay: index * 0.12 }}
+      className={`relative flex h-full cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border p-4 text-foreground transition-shadow md:gap-5 md:p-6 ${
+        best
+          ? "border-brand/30 bg-brand-soft/60 shadow-[0_16px_48px_-8px_rgba(22,163,74,0.25)] hover:shadow-[0_24px_56px_-8px_rgba(22,163,74,0.35)]"
+          : highlighted
+            ? "border-brand/25 bg-brand-soft/50 shadow-[0_14px_40px_-8px_rgba(22,163,74,0.20)] hover:shadow-[0_20px_48px_-8px_rgba(22,163,74,0.30)]"
+            : "border-brand/20 bg-brand-soft/45 shadow-[0_12px_36px_-8px_rgba(22,163,74,0.16)] hover:shadow-[0_18px_44px_-8px_rgba(22,163,74,0.26)]"
       }`}
     >
-      {highlighted && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-neon via-brand to-transparent" />
-      )}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-brand/40 via-brand/20 to-transparent" />
       <div className="relative">
         <div className="flex items-center gap-2">
-          <h3 className="font-heading text-lg font-bold">{t(plan.name)}</h3>
+          <h3 className="font-heading text-sm font-bold md:text-lg">{t(plan.name)}</h3>
           {current && (
             <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-semibold text-brand-foreground">
               {t(ui.account.current)}
             </span>
           )}
-          {highlighted && !current && (
+          {best && !current && (
+            <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-brand-foreground">
+              Best value
+            </span>
+          )}
+          {plan.id === "pro" && !current && (
             <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-semibold text-brand-foreground">
               Popular
             </span>
           )}
         </div>
-        <p className="mt-2 font-heading text-4xl font-bold tracking-tight">
+        <p className="mt-1 font-heading text-2xl font-bold tracking-tight md:mt-2 md:text-4xl">
           {plan.priceUsd === 0 ? "$0" : `$${plan.priceUsd}`}
-          <span className="text-base font-medium text-subtle"> /mes</span>
+          <span className="text-xs font-medium text-subtle md:text-base"> /mes</span>
         </p>
       </div>
 
-      <ul className="relative flex flex-col gap-2.5 text-sm">
+      <ul className="relative flex flex-col gap-1.5 text-xs md:gap-2.5 md:text-sm">
         {t(plan.features).map((feature) => (
-          <li key={feature} className="flex items-start gap-2.5">
+          <li key={feature} className="flex items-start gap-1.5 md:gap-2.5">
             <span
-              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
-                highlighted ? "bg-brand text-brand-foreground" : "bg-brand-soft text-brand-dark"
-              }`}
+              className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand-dark md:h-5 md:w-5"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <svg className="h-2.5 w-2.5 md:h-3 md:w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
                   d="m5 13 4 4L19 7"
                   stroke="currentColor"

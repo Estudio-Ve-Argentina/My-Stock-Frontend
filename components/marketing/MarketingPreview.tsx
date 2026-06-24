@@ -10,7 +10,7 @@ import { PanelIcon, BoxIcon, ClockIcon } from "@/components/app/icons";
 
 function stockTone(stock: number): string {
   if (stock === 0) {
-    return "bg-danger/10 text-danger";
+    return "bg-danger/15 text-danger";
   }
   if (stock <= 3) {
     return "bg-accent-soft text-accent-foreground";
@@ -43,6 +43,7 @@ export function MarketingPreview() {
           title={preview.title}
           subtitle={preview.subtitle}
           align="center"
+          tone="dark"
         />
 
         <motion.div
@@ -50,19 +51,19 @@ export function MarketingPreview() {
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ type: "spring", stiffness: 220, damping: 22 }}
-          className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl shadow-brand/10"
+          className="relative mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl border-2 border-dark-border bg-surface shadow-[0_20px_60px_-12px_rgba(52,240,138,0.25)]"
         >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-neon via-brand to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-neon via-brand to-transparent" />
 
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <span className="h-2.5 w-2.5 rounded-full bg-danger/40" />
-            <span className="h-2.5 w-2.5 rounded-full bg-accent/50" />
-            <span className="h-2.5 w-2.5 rounded-full bg-brand/50" />
+          <div className="flex items-center gap-2 border-b-2 border-border px-4 py-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-danger/50" />
+            <span className="h-2.5 w-2.5 rounded-full bg-accent/60" />
+            <span className="h-2.5 w-2.5 rounded-full bg-brand/60" />
             <span className="ml-2 text-xs font-medium text-subtle">My-Stock · {t(ui.nav.panel)}</span>
           </div>
 
           <div className="grid grid-cols-[auto_1fr] gap-0">
-            <div className="hidden flex-col gap-1.5 border-r border-border bg-muted/50 p-3 sm:flex">
+            <div className="hidden flex-col gap-1.5 border-r-2 border-border bg-muted/50 p-3 sm:flex">
               {navItems.map((entry, index) => (
                 <span
                   key={index}
@@ -86,7 +87,7 @@ export function MarketingPreview() {
                     className={`relative overflow-hidden rounded-xl p-3 ${
                       tile.filled
                         ? "bg-gradient-to-br from-brand to-brand-dark text-brand-foreground shadow-[0_14px_30px_-16px_rgba(22,163,74,0.7)]"
-                        : "border border-border bg-background text-foreground"
+                        : "border-2 border-border bg-background text-foreground"
                     }`}
                   >
                     <p className="font-heading text-2xl font-bold tabular-nums">{tile.value}</p>

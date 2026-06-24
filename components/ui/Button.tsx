@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 
 type ButtonVariant = "primary" | "soft" | "accent" | "outline" | "ghost" | "danger";
 type ButtonSize = "md" | "sm";
@@ -11,7 +11,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   accent: "bg-accent text-white shadow-sm shadow-accent/20 hover:brightness-105",
   outline: "border border-border bg-surface text-foreground hover:bg-muted",
   ghost: "text-subtle hover:bg-muted hover:text-foreground",
-  danger: "text-danger hover:bg-danger/10",
+  danger: "bg-danger text-white shadow-sm shadow-danger/20 hover:bg-danger/90",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -26,7 +26,7 @@ function classesFor(
   className: string,
 ): string {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
     variantClasses[variant],
     sizeClasses[size],
     fullWidth ? "w-full" : "",
@@ -77,22 +77,28 @@ export function LinkButton({
 
 type ButtonProps = CommonProps & ButtonHTMLAttributes<HTMLButtonElement>;
 
-export function Button({
-  variant = "primary",
-  size = "md",
-  fullWidth = false,
-  className = "",
-  type = "button",
-  children,
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      type={type}
-      className={classesFor(variant, size, fullWidth, className)}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    {
+      variant = "primary",
+      size = "md",
+      fullWidth = false,
+      className = "",
+      type = "button",
+      children,
+      ...props
+    },
+    ref,
+  ) {
+    return (
+      <button
+        ref={ref}
+        type={type}
+        className={classesFor(variant, size, fullWidth, className)}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  },
+);

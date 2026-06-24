@@ -32,7 +32,6 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
         description: description.trim(),
         stock: Math.max(0, Number(stock) || 0),
         userId,
-        createdAt: new Date().toISOString().slice(0, 19),
       });
       onDone();
     } catch {

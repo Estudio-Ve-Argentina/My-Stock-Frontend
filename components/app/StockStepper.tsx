@@ -24,7 +24,7 @@ export function StockStepper({ product, onChange }: StockStepperProps) {
   }
 
   const buttonClass =
-    "flex h-9 w-9 items-center justify-center rounded-full text-xl font-medium transition-colors disabled:opacity-40";
+    "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-xl font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
     <div className="flex items-center gap-1.5">

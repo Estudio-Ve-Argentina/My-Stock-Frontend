@@ -10,20 +10,20 @@
   --brand: #16a34a;
   --brand-foreground: #ffffff;
   --brand-dark: #14532d;
-  --brand-soft: #cdeed8;
-  --brand-tint: #eafaf0;
+  --brand-soft: #a8e4be;
+  --brand-tint: #cef0dc;
 
   --accent: #f5c211;
   --accent-foreground: #3a2e05;
-  --accent-soft: #fdf2c2;
+  --accent-soft: #fce68a;
 
   --brown: #8a5a2b;
   --brown-foreground: #ffffff;
-  --brown-soft: #ecdcc8;
+  --brown-soft: #e4c9a0;
 
   --surface: #ffffff;
-  --muted: #edf2e6;
-  --border: #dfe7d6;
+  --muted: #e2edda;
+  --border: #b8cdaa;
   --subtle: #5c6b56;
 
   --dark: #07100b;
@@ -71,7 +71,7 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
 
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --font-body: var(--font-sans);
 }
 
@@ -93,15 +93,22 @@ body {
 }
 
 .texture-dots {
-  background-image: radial-gradient(rgba(22, 163, 74, 0.14) 1px, transparent 1.6px);
+  background-image: radial-gradient(rgba(52, 240, 138, 0.33) 1.2px, transparent 1.8px);
   background-size: 22px 22px;
 }
 
 .texture-grid {
   background-image:
-    linear-gradient(to right, rgba(20, 36, 26, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(20, 36, 26, 0.045) 1px, transparent 1px);
+    linear-gradient(to right, rgba(52, 240, 138, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(52, 240, 138, 0.15) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+.texture-grid-light {
+  background-image:
+    linear-gradient(to right, rgba(22, 163, 74, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 163, 74, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
 }
 
 .texture-fade {
@@ -115,8 +122,15 @@ body {
     var(--accent),
     var(--neon)
   );
-  background-size: 100% 0.18em;
+  background-size: 100% 0.28em;
   background-position: 0 100%;
   background-repeat: no-repeat;
-  padding-bottom: 0.12em;
+  padding-bottom: 0.14em;
+}
+
+.section-divider {
+  height: 3px;
+  background: linear-gradient(to right, var(--brand), var(--accent), transparent);
+  border: none;
+  margin: 0;
 }

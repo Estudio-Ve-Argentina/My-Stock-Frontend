@@ -1,14 +1,65 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
 import { Spinner } from "@/components/ui/Spinner";
 import { MovementItem } from "./MovementItem";
+import type { Movement } from "@/config/site.types";
+
+function dateKey(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+function dateLabel(key: string, locale: string): string {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const todayKey = today.toISOString().slice(0, 10);
+  const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+  if (key === todayKey) return locale === "es" ? "Hoy" : "Today";
+  if (key === yesterdayKey) return locale === "es" ? "Ayer" : "Yesterday";
+
+  return new Date(key + "T12:00:00").toLocaleDateString(
+    locale === "es" ? "es-AR" : "en-US",
+    { weekday: "long", day: "numeric", month: "long" },
+  );
+}
+
+function groupByDate(movements: Movement[]): Map<string, Movement[]> {
+  const groups = new Map<string, Movement[]>();
+  for (const movement of movements) {
+    const key = dateKey(movement.at);
+    const group = groups.get(key);
+    if (group) {
+      group.push(movement);
+    } else {
+      groups.set(key, [movement]);
+    }
+  }
+  return groups;
+}
 
 export function HistorialView() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { movements, loading } = useMovements();
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!from && !to) return movements;
+    return movements.filter((m) => {
+      const day = dateKey(m.at);
+      if (from && day < from) return false;
+      if (to && day > to) return false;
+      return true;
+    });
+  }, [movements, from, to]);
+
+  const grouped = useMemo(() => groupByDate(filtered), [filtered]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -19,20 +70,59 @@ export function HistorialView() {
         <p className="text-sm text-subtle">{t(ui.history.subtitle)}</p>
       </header>
 
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-subtle">{t(ui.history.filterFrom)}</span>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-brand"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-subtle">{t(ui.history.filterTo)}</span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-brand"
+          />
+        </label>
+        {(from || to) && (
+          <button
+            type="button"
+            onClick={() => { setFrom(""); setTo(""); }}
+            className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-subtle transition-colors hover:text-foreground"
+          >
+            {t(ui.common.cancel)}
+          </button>
+        )}
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-16 text-brand">
           <Spinner />
         </div>
-      ) : movements.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border bg-muted/40 py-16 text-center text-sm text-subtle">
           {t(ui.history.empty)}
         </p>
       ) : (
-        <ul className="flex flex-col gap-2.5">
-          {movements.map((movement) => (
-            <MovementItem key={movement.id} movement={movement} />
+        <div className="flex flex-col gap-6">
+          {[...grouped.entries()].map(([key, items]) => (
+            <section key={key} className="flex flex-col gap-2.5">
+              <h2 className="font-heading text-base font-bold capitalize tracking-wide text-foreground">
+                {dateLabel(key, locale)}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {items.map((movement) => (
+                  <MovementItem key={movement.id} movement={movement} />
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

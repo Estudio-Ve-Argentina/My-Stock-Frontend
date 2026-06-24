@@ -11,7 +11,7 @@ export function MarketingHeader() {
   const { t } = useLanguage();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-muted">
+    <header className="sticky top-0 z-30 bg-muted">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6 md:px-8">
         <Wordmark />
         <div className="flex items-center gap-3">
@@ -27,6 +27,7 @@ export function MarketingHeader() {
           </LinkButton>
         </div>
       </div>
+      <div className="h-[3px] bg-gradient-to-r from-brand via-accent to-brown/40" />
     </header>
   );
 }

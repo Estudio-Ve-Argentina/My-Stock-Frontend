@@ -9,11 +9,13 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import type { PlanId } from "@/config/site.types";
 import { decodeJwt, isTokenValid } from "@/lib/auth/jwt";
+import { logout as apiLogout } from "@/lib/api/auth";
 import {
-  clearTokenCookie,
+  clearAllTokens,
+  readRefreshCookie,
   readTokenCookie,
+  writeRefreshCookie,
   writeTokenCookie,
 } from "@/lib/auth/session";
 
@@ -21,13 +23,14 @@ export interface SessionUser {
   username: string;
   userId: number | null;
   roles: string[];
-  plan: PlanId;
+  planName: string;
+  maxProducts: number | null;
 }
 
 export interface AuthContextValue {
   user: SessionUser | null;
   ready: boolean;
-  signIn: (token: string, fallbackUsername?: string) => void;
+  signIn: (token: string, refreshToken: string, fallbackUsername?: string) => void;
   signOut: () => void;
 }
 
@@ -49,7 +52,8 @@ function userFromToken(
     username,
     userId: claims?.userId ?? null,
     roles: claims?.roles ?? [],
-    plan: "free",
+    planName: "FREE",
+    maxProducts: null,
   };
 }
 
@@ -65,26 +69,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (next) {
         setUser(next);
       } else {
-        clearTokenCookie();
+        clearAllTokens();
       }
     }
     setReady(true);
   }, []);
 
   const signIn = useCallback(
-    (token: string, fallbackUsername?: string) => {
+    (token: string, refreshToken: string, fallbackUsername?: string) => {
       const next = userFromToken(token, fallbackUsername);
       if (!next) {
         return;
       }
       writeTokenCookie(token);
+      writeRefreshCookie(refreshToken);
       setUser(next);
     },
     [],
   );
 
   const signOut = useCallback(() => {
-    clearTokenCookie();
+    const refresh = readRefreshCookie();
+    if (refresh) {
+      apiLogout(refresh).catch(() => {});
+    }
+    clearAllTokens();
     setUser(null);
     router.replace("/login");
   }, [router]);

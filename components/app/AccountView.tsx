@@ -1,7 +1,6 @@
 "use client";
 
 import { ui } from "@/config/i18n";
-import { planById } from "@/config/app.config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
@@ -13,12 +12,12 @@ export function AccountView() {
   const { user, signOut } = useAuth();
   const { products } = useProducts(user?.username);
 
-  const currentPlan = planById(user?.plan ?? "free");
+  const planLabel = user?.planName ?? "FREE";
   const used = products.length;
   const usage =
-    currentPlan.productLimit === null
+    user?.maxProducts === null || user?.maxProducts === undefined
       ? t(ui.account.unlimited)
-      : `${used} / ${currentPlan.productLimit}`;
+      : `${used} / ${user.maxProducts}`;
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
@@ -38,7 +37,7 @@ export function AccountView() {
             @{user?.username}
           </p>
           <p className="text-sm text-subtle">
-            {t(currentPlan.name)} · {usage} {t(ui.account.productsUsed)}
+            {planLabel} · {usage} {t(ui.account.productsUsed)}
           </p>
         </div>
       </div>
@@ -49,7 +48,7 @@ export function AccountView() {
             {t(ui.account.plan)}
           </p>
           <p className="mt-1 font-heading text-2xl font-bold tracking-tight">
-            {t(currentPlan.name)}
+            {planLabel}
           </p>
           <LinkButton href="/planes" variant="accent" size="sm" className="mt-4">
             {t(ui.account.upgradeCta)}

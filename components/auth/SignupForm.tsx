@@ -37,7 +37,7 @@ export function SignupForm() {
     setPending(true);
     try {
       const response = await signup(form);
-      signIn(response.jwtToken, response.username);
+      signIn(response.jwtToken, response.refreshToken, response.username);
       router.replace("/panel");
     } catch {
       setError(t(ui.common.genericError));

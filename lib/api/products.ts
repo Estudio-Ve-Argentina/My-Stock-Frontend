@@ -5,6 +5,7 @@ import {
   mockCreateProduct,
   mockDeleteProduct,
   mockListProducts,
+  mockUpdateProduct,
   mockUpdateStock,
 } from "./mock";
 
@@ -28,6 +29,20 @@ export function createProduct(
   return apiRequest<ProductResponse>("/api/products", {
     method: "POST",
     body: input,
+  });
+}
+
+export function updateProduct(
+  id: number,
+  name: string,
+  description: string,
+): Promise<ProductResponse> {
+  if (isMockEnabled()) {
+    return mockUpdateProduct(id, name, description);
+  }
+  return apiRequest<ProductResponse>(`/api/products/${id}`, {
+    method: "PUT",
+    body: { name, description },
   });
 }
 

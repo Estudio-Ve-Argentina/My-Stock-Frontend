@@ -42,8 +42,8 @@ export const appConfig: AppConfig = {
     },
     {
       id: "pro",
-      name: { es: "Pago", en: "Paid" },
-      priceUsd: 5,
+      name: { es: "Mensual", en: "Monthly" },
+      priceUsd: 6.5,
       productLimit: null,
       features: {
         es: [
@@ -55,6 +55,26 @@ export const appConfig: AppConfig = {
           "Unlimited products",
           "Real-time stock control",
           "Priority support",
+        ],
+      },
+    },
+    {
+      id: "pro-annual",
+      name: { es: "Anual", en: "Annual" },
+      priceUsd: 4,
+      productLimit: null,
+      features: {
+        es: [
+          "Productos ilimitados",
+          "Control de stock en tiempo real",
+          "Soporte prioritario",
+          "Ahorrás un 38%",
+        ],
+        en: [
+          "Unlimited products",
+          "Real-time stock control",
+          "Priority support",
+          "Save 38%",
         ],
       },
     },
@@ -132,8 +152,8 @@ export const marketing = {
   pricing: {
     title: { es: "Precios claros", en: "Clear pricing" },
     subtitle: {
-      es: "Empezá gratis. Cuando tu negocio crece, pasás a ilimitado por 5 dólares.",
-      en: "Start free. When your business grows, go unlimited for 5 dollars.",
+      es: "Empezá gratis. Cuando tu negocio crece, pasá al plan que más te sirva.",
+      en: "Start free. When your business grows, pick the plan that fits.",
     },
   },
 };

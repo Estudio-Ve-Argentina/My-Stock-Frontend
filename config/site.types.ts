@@ -4,7 +4,7 @@ export type Locale = (typeof LOCALES)[number];
 
 export type Localized<T = string> = Record<Locale, T>;
 
-export type PlanId = "free" | "pro";
+export type PlanId = "free" | "pro" | "pro-annual";
 
 export interface Plan {
   id: PlanId;
@@ -18,11 +18,22 @@ export interface AuthResponse {
   username: string;
   message: string;
   jwtToken: string;
+  refreshToken: string;
   status: boolean;
 }
 
+export interface UserMeResponse {
+  id: number;
+  name: string;
+  lastName: string;
+  username: string;
+  planName: string;
+  maxProducts: number;
+  roles: string[];
+}
+
 export interface ProductResponse {
-  id?: number;
+  id: number;
   name: string;
   description: string;
   createdAt: string;
@@ -34,7 +45,6 @@ export interface ProductResponse {
 export interface ProductRequest {
   name: string;
   description: string;
-  createdAt: string;
   stock: number;
   userId: number;
 }
@@ -55,4 +65,19 @@ export interface Movement {
   type: MovementType;
   quantity: number;
   at: string;
+}
+
+export interface StockMovementResponse {
+  id: number;
+  productName: string;
+  productId: number;
+  quantity: number;
+  createdAt: string;
+}
+
+export interface PlanResponse {
+  id: number;
+  name: string;
+  maxProducts: number;
+  price: number;
 }

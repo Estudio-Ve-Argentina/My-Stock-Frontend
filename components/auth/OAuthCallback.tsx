@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { exchangeOAuthCode } from "@/lib/api/auth";
 import { Spinner } from "@/components/ui/Spinner";
 import { LinkButton } from "@/components/ui/Button";
 
@@ -14,15 +15,22 @@ export function OAuthCallback() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [failed, setFailed] = useState(false);
+  const exchanged = useRef(false);
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    if (!token) {
-      setFailed(true);
+    const code = searchParams.get("code");
+    if (!code || exchanged.current) {
+      if (!code) setFailed(true);
       return;
     }
-    signIn(token);
-    router.replace("/panel");
+    exchanged.current = true;
+
+    exchangeOAuthCode(code)
+      .then((response) => {
+        signIn(response.jwtToken, response.refreshToken, response.username);
+        router.replace("/panel");
+      })
+      .catch(() => setFailed(true));
   }, [searchParams, signIn, router]);
 
   if (failed) {

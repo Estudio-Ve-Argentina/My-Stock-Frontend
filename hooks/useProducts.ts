@@ -6,6 +6,7 @@ import {
   createProduct,
   deleteProduct,
   listProductsByUsername,
+  updateProduct,
   updateStock,
 } from "@/lib/api/products";
 
@@ -49,9 +50,7 @@ export function useProducts(username: string | undefined) {
 
   const changeStock = useCallback(
     async (product: ProductResponse, delta: number) => {
-      if (product.id === undefined || product.stock + delta < 0) {
-        return;
-      }
+      if (product.stock + delta < 0) return;
       const updated = await updateStock(product.id, delta);
       setState((current) => ({
         ...current,
@@ -63,10 +62,20 @@ export function useProducts(username: string | undefined) {
     [],
   );
 
+  const update = useCallback(
+    async (product: ProductResponse, name: string, description: string) => {
+      const updated = await updateProduct(product.id, name, description);
+      setState((current) => ({
+        ...current,
+        products: current.products.map((item) =>
+          item.id === product.id ? updated : item,
+        ),
+      }));
+    },
+    [],
+  );
+
   const remove = useCallback(async (product: ProductResponse) => {
-    if (product.id === undefined) {
-      return;
-    }
     await deleteProduct(product.id);
     setState((current) => ({
       ...current,
@@ -74,5 +83,5 @@ export function useProducts(username: string | undefined) {
     }));
   }, []);
 
-  return { ...state, reload: load, add, changeStock, remove };
+  return { ...state, reload: load, add, changeStock, update, remove };
 }

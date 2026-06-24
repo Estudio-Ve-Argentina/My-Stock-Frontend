@@ -8,7 +8,7 @@ interface SectionProps {
 
 export function Section({ id, className = "", children }: SectionProps) {
   return (
-    <section id={id} className={`relative scroll-mt-16 py-16 md:py-24 ${className}`}>
+    <section id={id} className={`relative scroll-mt-16 py-8 md:py-12 ${className}`}>
       <div className="mx-auto w-full max-w-6xl px-6 md:px-8">{children}</div>
     </section>
   );

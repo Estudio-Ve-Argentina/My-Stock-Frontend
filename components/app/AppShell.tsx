@@ -32,7 +32,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="w-10" />
         </header>
 
-        <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-8">{children}</main>
+        <main className="relative flex-1">
+          <div className="texture-dots pointer-events-none absolute inset-0 opacity-100" />
+          <div className="relative mx-auto w-full max-w-5xl px-5 py-8">{children}</div>
+        </main>
       </div>
 
       <AnimatePresence>

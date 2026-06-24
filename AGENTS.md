@@ -72,23 +72,28 @@ components/
 - **Listas → `grid`** por defecto.
 
 ## Autenticación
-- Login/signup contra `/auth/*`; OAuth2 Google vía redirect del backend a `/oauth2/success?token=`.
-- El **JWT se guarda en cookie** (`mystock_token`), no en localStorage: `proxy.ts` necesita leerlo para proteger rutas en el server. Ese es el motivo de usar runtime de servidor.
-- `AuthProvider` mantiene la sesión decodificando los claims del JWT (`lib/auth/jwt.ts`). Se consume con `useAuth()` → `{ user, ready, signIn, signOut }`.
+- Login/signup contra `/auth/*`; responden con `jwtToken` + `refreshToken`.
+- OAuth2 Google: front redirige a `GET /oauth2/authorization/google` → backend redirige a `{frontend}/oauth2/success?code=<uuid>` → front llama `POST /auth/oauth2/exchange?code=<uuid>` y recibe ambos tokens.
+- **Access token (JWT)** en cookie `mystock_token` (30 min) — `proxy.ts` lo lee server-side para proteger rutas.
+- **Refresh token** en cookie `mystock_refresh` (7 días). Cuando el access expira (401), el front llama `POST /auth/refresh?refreshToken=<valor>` y obtiene nuevo access token.
+- **`GET /auth/me`** devuelve `{ id, name, lastName, username, planName, maxProducts, roles }`. Se usa para obtener la identidad y datos del plan del usuario autenticado.
+- `AuthProvider` mantiene la sesión. Se consume con `useAuth()` → `{ user, ready, signIn, signOut }`.
 - **Doble guard:** `proxy.ts` (server, antes de render) + `<AppGuard>` (cliente, evita flash y maneja expiración).
-- En `signup` se fuerza `roleEnum: "USER"`: el cliente nunca elige rol.
+- En `signup` se envían `name`, `lastname`, `username`, `password`. El backend asigna rol `USER` y plan `FREE` automáticamente.
+- **Logout:** `POST /auth/logout?refreshToken=<valor>` borra el refresh del backend; el front limpia ambas cookies.
 
-### Gaps del backend (asumidos en el front, fáciles de cambiar cuando existan)
-- **No hay `/auth/me`:** la identidad sale de decodificar el JWT. Si el token no trae `userId`/`id`, el alta de producto manda `userId: 0` → el back debería incluir el id en los claims o exponer `/me`.
-- **Las respuestas de producto no documentan `id`:** stock ± y borrar dependen de `product.id`; si no viene, esas acciones se omiten.
-- **`PATCH /{id}/stock` con `{quantity}`** se asume como **delta** (suma/resta), no set. Centralizado en `lib/api/products.ts` y `useProducts`.
-- **No existe endpoint de movimientos/auditoría:** el Panel (movimientos del día, productos modificados) e Historial están **maquetados** con datos de muestra en `lib/api/mock.ts`. Conectar cuando el backend lo exponga (`lib/api/history.ts`).
-- **No existen planes ni pagos en la API:** ver Planes.
+### Semántica confirmada
+- **`PATCH /api/products/{id}/stock`** con `{ "quantity": N }` es un **delta** (suma/resta), no set. Si el resultado sería negativo → 400.
+- **Productos:** la respuesta siempre incluye `id` (Long). Ownership validada server-side.
+- **Movimientos:** `GET /api/stock-movements/user/{userId}` — el `userId` es el `id` de `/auth/me`. Se generan automáticamente al cambiar stock.
+- **Planes:** existen en la API (`GET /api/plans`). Backend define `FREE` (10 prod) y `PAID` (120 prod, $5).
+- **Upgrade:** `PATCH /api/user/{id}/plan` con `{ "planId": 2 }` cambia el plan directamente (sin pago real por ahora).
 
-## Planes (maquetado, sin pago real)
-- Definidos en `config/app.config.ts`: `free` (límite 10 productos) y `pro` ($5/mes, ilimitado).
-- El front asume `plan: "free"` por defecto (no hay campo de plan en la API todavía).
-- Al llegar al límite: se deshabilita "Agregar" y aparece `PlanLimitBanner`. El upgrade es **placeholder** (CTA a WhatsApp de soporte) hasta que el backend tenga plan + integración de pago. **No inventar un flujo de cobro.**
+## Planes
+- Definidos en el backend: `FREE` (10 productos, $0) y `PAID` (120 productos, $5). Se consultan con `GET /api/plans`.
+- El front obtiene el plan del usuario desde `/auth/me` → `planName` y `maxProducts`.
+- Al llegar al límite: se deshabilita "Agregar" y aparece `PlanLimitBanner`.
+- El upgrade llama a `PATCH /api/user/{id}/plan` con `{ "planId": 2 }`. **No hay cobro real todavía — no inventar flujo de pago.**
 
 ## Configuración y contenido
 - **Todo lo editable del producto vive en `config/app.config.ts`** (nombre, planes, copy de marketing, contacto). Nunca hardcodear texto, números ni links en componentes.
@@ -121,8 +126,7 @@ Lazy loading, code splitting y minimizar el JS de cliente. Tomar siempre la deci
 - **Defaults de contacto/soporte:** WhatsApp `+5492236680996`, sitio `estudiove.ar`.
 
 ## Ejecución — alcance estricto
-- La **única** verificación permitida es `pnpm build`. Nada más.
-- **Prohibido sin pedido explícito**: levantar `pnpm dev`/servidor, abrir el navegador, screenshots, previsualizar. Si el build pasa, terminás ahí.
+- **No ejecutar ningún comando** (`pnpm build`, `pnpm dev`, servidor, navegador, screenshots) **salvo que el usuario lo pida explícitamente.**
 
 ## Deploy
 - Vercel con runtime de Next (sin `output: 'export'`). Cada push a `main` dispara deploy. Configurar `NEXT_PUBLIC_API_URL` en Vercel apuntando al backend.

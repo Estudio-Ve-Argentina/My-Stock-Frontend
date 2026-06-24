@@ -43,7 +43,7 @@ export function ProductCard({ product, onStock, onDelete }: ProductCardProps) {
           type="button"
           aria-label={t(ui.common.delete)}
           onClick={() => onDelete(product)}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-subtle transition-colors hover:bg-danger/10 hover:text-danger"
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-subtle transition-colors hover:bg-danger/10 hover:text-danger"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path

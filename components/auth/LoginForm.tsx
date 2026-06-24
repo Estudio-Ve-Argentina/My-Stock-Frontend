@@ -31,7 +31,7 @@ export function LoginForm() {
     setPending(true);
     try {
       const response = await login({ username, password });
-      signIn(response.jwtToken, response.username);
+      signIn(response.jwtToken, response.refreshToken, response.username);
       router.replace(next);
     } catch (caught) {
       setError(
