@@ -13,6 +13,7 @@ import {
   PlusIcon,
   BoxIcon,
   ClockIcon,
+  TagIcon,
   SparkIcon,
   UserIcon,
   LogoutIcon,
@@ -31,6 +32,7 @@ const mainItems: NavItem[] = [
   { href: "/cargar", label: ui.nav.create, icon: PlusIcon },
   { href: "/productos", label: ui.nav.products, icon: BoxIcon },
   { href: "/historial", label: ui.nav.history, icon: ClockIcon },
+  { href: "/categorias", label: ui.nav.categories, icon: TagIcon },
 ];
 
 interface SidebarNavProps {
@@ -83,7 +85,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
       </nav>
 
       <div className="flex flex-col gap-1.5 border-t border-dark-border pt-3">
-        <Link href="/planes" onClick={onNavigate} className={linkClass("/planes")}>
+        <Link href="/mi-plan" onClick={onNavigate} className={linkClass("/mi-plan")}>
           <SparkIcon className="h-5 w-5 shrink-0" />
           {t(ui.nav.plans)}
         </Link>

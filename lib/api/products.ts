@@ -32,17 +32,23 @@ export function createProduct(
   });
 }
 
+export interface UpdateProductInput {
+  name: string;
+  description: string;
+  categoryId?: number | null;
+  minStock?: number;
+}
+
 export function updateProduct(
   id: number,
-  name: string,
-  description: string,
+  input: UpdateProductInput,
 ): Promise<ProductResponse> {
   if (isMockEnabled()) {
-    return mockUpdateProduct(id, name, description);
+    return mockUpdateProduct(id, input);
   }
   return apiRequest<ProductResponse>(`/api/products/${id}`, {
     method: "PUT",
-    body: { name, description },
+    body: input,
   });
 }
 

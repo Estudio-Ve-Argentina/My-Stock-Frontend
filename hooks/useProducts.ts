@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { ProductRequest, ProductResponse } from "@/config/site.types";
+import type { UpdateProductInput } from "@/lib/api/products";
 import {
   createProduct,
   deleteProduct,
@@ -63,8 +64,8 @@ export function useProducts(username: string | undefined) {
   );
 
   const update = useCallback(
-    async (product: ProductResponse, name: string, description: string) => {
-      const updated = await updateProduct(product.id, name, description);
+    async (product: ProductResponse, input: UpdateProductInput) => {
+      const updated = await updateProduct(product.id, input);
       setState((current) => ({
         ...current,
         products: current.products.map((item) =>

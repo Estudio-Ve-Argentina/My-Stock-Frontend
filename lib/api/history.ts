@@ -1,12 +1,25 @@
-import type { Movement, Page, StockMovementResponse } from "@/config/site.types";
+import type { BackendMovementType, Movement, MovementType, Page, StockMovementResponse } from "@/config/site.types";
 import { apiRequest } from "./client";
 import { isMockEnabled, mockListMovements } from "./mock";
+
+function mapMovementType(movementType: BackendMovementType, quantity: number): MovementType {
+  switch (movementType) {
+    case "PRODUCT_CREATED":
+      return "created";
+    case "PRODUCT_DELETED":
+      return "deleted";
+    case "PRODUCT_MODIFIED":
+      return "modified";
+    case "STOCK_UPDATE":
+      return quantity >= 0 ? "increased" : "decreased";
+  }
+}
 
 function toMovement(raw: StockMovementResponse): Movement {
   return {
     id: raw.id,
     productName: raw.productName,
-    type: raw.quantity >= 0 ? "increased" : "decreased",
+    type: mapMovementType(raw.movementType, raw.quantity),
     quantity: Math.abs(raw.quantity),
     at: raw.createdAt,
   };

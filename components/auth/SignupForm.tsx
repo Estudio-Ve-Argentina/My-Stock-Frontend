@@ -46,12 +46,12 @@ export function SignupForm() {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-7 shadow-sm">
-      <h1 className="mb-6 font-heading text-2xl font-bold tracking-tight text-foreground">
+    <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-7">
+      <h1 className="mb-4 font-heading text-2xl font-bold tracking-tight text-foreground sm:mb-6">
         {t(ui.auth.signupTitle)}
       </h1>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form onSubmit={onSubmit} className="flex flex-col gap-3 sm:gap-4">
         <div className="grid grid-cols-2 gap-3">
           <TextField
             label={t(ui.auth.name)}
@@ -96,7 +96,7 @@ export function SignupForm() {
         </Button>
       </form>
 
-      <div className="my-5 flex items-center gap-3 text-xs text-subtle">
+      <div className="my-3 flex items-center gap-3 text-xs text-subtle sm:my-5">
         <span className="h-px flex-1 bg-border" />
         {t(ui.auth.or)}
         <span className="h-px flex-1 bg-border" />
@@ -104,7 +104,7 @@ export function SignupForm() {
 
       <GoogleButton />
 
-      <p className="mt-6 text-center text-sm font-medium text-subtle">
+      <p className="mt-4 text-center text-sm font-medium text-subtle sm:mt-6">
         {t(ui.auth.hasAccount)}{" "}
         <Link href="/login" className="font-semibold text-brand-dark hover:underline">
           {t(ui.auth.goLogin)}

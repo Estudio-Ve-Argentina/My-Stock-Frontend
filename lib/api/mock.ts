@@ -1,10 +1,13 @@
 import type {
   AuthResponse,
+  CategoryRequest,
+  CategoryResponse,
   Movement,
   ProductRequest,
   ProductResponse,
 } from "@/config/site.types";
 import type { LoginInput, SignupInput } from "./auth";
+import type { UpdateProductInput } from "./products";
 
 export function isMockEnabled(): boolean {
   return process.env.NEXT_PUBLIC_USE_MOCK === "true";
@@ -66,7 +69,11 @@ function readStore(userId: number): ProductResponse[] {
     return [];
   }
   const raw = window.localStorage.getItem(storeKey(userId));
-  return raw ? (JSON.parse(raw) as ProductResponse[]) : [];
+  if (!raw) return [];
+  return (JSON.parse(raw) as ProductResponse[]).map((p) => ({
+    ...p,
+    active: p.active ?? true,
+  }));
 }
 
 function writeStore(userId: number, products: ProductResponse[]): void {
@@ -83,7 +90,21 @@ export function mockCreateProduct(
   const products = readStore(input.userId);
   const nextId =
     products.reduce((max, item) => Math.max(max, item.id), 0) + 1;
-  const created: ProductResponse = { ...input, id: nextId, user: "", createdAt: new Date().toISOString() };
+  const minStock = input.minStock ?? 0;
+  const categoryName = input.categoryId
+    ? readMockCategories().find((c) => c.id === input.categoryId)?.name ?? null
+    : null;
+  const created: ProductResponse = {
+    ...input,
+    id: nextId,
+    active: true,
+    user: "",
+    createdAt: new Date().toISOString(),
+    minStock,
+    lowStock: minStock > 0 && input.stock <= minStock,
+    categoryId: input.categoryId ?? null,
+    categoryName,
+  };
   writeStore(input.userId, [created, ...products]);
   addMockMovement({ productName: input.name, type: "created", quantity: 0 });
   return Promise.resolve(created);
@@ -106,16 +127,22 @@ function findStore(id: number): { userId: number; products: ProductResponse[] } 
 
 export function mockUpdateProduct(
   id: number,
-  name: string,
-  description: string,
+  input: UpdateProductInput,
 ): Promise<ProductResponse> {
   const found = findStore(id);
   if (!found) {
     return Promise.reject(new Error("Product not found"));
   }
   const target = found.products.find((item) => item.id === id)!;
-  target.name = name;
-  target.description = description;
+  target.name = input.name;
+  target.description = input.description;
+  target.minStock = input.minStock ?? target.minStock ?? 0;
+  target.lowStock =
+    target.minStock > 0 && target.stock <= target.minStock;
+  target.categoryId = input.categoryId ?? null;
+  target.categoryName = target.categoryId
+    ? readMockCategories().find((c) => c.id === target.categoryId)?.name ?? null
+    : null;
   writeStore(found.userId, found.products);
   return Promise.resolve(target);
 }
@@ -193,4 +220,52 @@ const SAMPLE_MOVEMENTS: Movement[] = [
 export function mockListMovements(): Promise<Movement[]> {
   const stored = readMovements();
   return Promise.resolve([...stored, ...SAMPLE_MOVEMENTS]);
+}
+
+const MOCK_CATEGORIES_KEY = "mystock_mock_categories";
+
+function readMockCategories(): CategoryResponse[] {
+  if (typeof window === "undefined") return [];
+  const raw = window.localStorage.getItem(MOCK_CATEGORIES_KEY);
+  return raw ? (JSON.parse(raw) as CategoryResponse[]) : [];
+}
+
+function writeMockCategories(categories: CategoryResponse[]): void {
+  window.localStorage.setItem(
+    MOCK_CATEGORIES_KEY,
+    JSON.stringify(categories),
+  );
+}
+
+export function mockListCategories(): Promise<CategoryResponse[]> {
+  return Promise.resolve(readMockCategories());
+}
+
+export function mockCreateCategory(
+  input: CategoryRequest,
+): Promise<CategoryResponse> {
+  const categories = readMockCategories();
+  const nextId =
+    categories.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+  const created: CategoryResponse = { id: nextId, name: input.name };
+  writeMockCategories([...categories, created]);
+  return Promise.resolve(created);
+}
+
+export function mockRenameCategory(
+  id: number,
+  input: CategoryRequest,
+): Promise<CategoryResponse> {
+  const categories = readMockCategories();
+  const target = categories.find((item) => item.id === id);
+  if (!target) return Promise.reject(new Error("Category not found"));
+  target.name = input.name;
+  writeMockCategories(categories);
+  return Promise.resolve(target);
+}
+
+export function mockDeleteCategory(id: number): Promise<void> {
+  const categories = readMockCategories();
+  writeMockCategories(categories.filter((item) => item.id !== id));
+  return Promise.resolve();
 }

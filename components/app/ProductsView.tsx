@@ -6,16 +6,17 @@ import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PlanLimitBanner } from "./PlanLimitBanner";
-import { PlusIcon } from "./icons";
+import { ChevronDownIcon, PlusIcon } from "./icons";
 
-function stockBadge(stock: number): string {
-  if (stock === 0) return "bg-danger/10 text-danger";
-  if (stock <= 3) return "bg-accent-soft text-accent-foreground";
+function stockBadge(product: ProductResponse): string {
+  if (product.stock === 0) return "bg-danger/10 text-danger";
+  if (product.lowStock) return "bg-accent-soft text-accent-foreground";
   return "bg-brand-soft text-brand-dark";
 }
 
@@ -23,7 +24,15 @@ type ModalState =
   | { kind: "none" }
   | { kind: "detail"; product: ProductResponse }
   | { kind: "delete"; product: ProductResponse }
-  | { kind: "edit"; product: ProductResponse; name: string; description: string }
+  | {
+      kind: "edit";
+      product: ProductResponse;
+      name: string;
+      description: string;
+      categoryId: number | null;
+      minStock: string;
+      showAdvanced: boolean;
+    }
   | { kind: "stock"; product: ProductResponse; delta: number; quantity: string };
 
 function RowMenu({
@@ -78,16 +87,18 @@ function RowMenu({
             </svg>
             {t(ui.products.viewDetails)}
           </button>
-          <button
-            type="button"
-            onClick={() => { setOpen(false); onEdit(); }}
-            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-brand-soft/15"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-subtle">
-              <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-            </svg>
-            {t(ui.products.edit)}
-          </button>
+          {product.active && (
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onEdit(); }}
+              className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-brand-soft/15"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-subtle">
+                <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              </svg>
+              {t(ui.products.edit)}
+            </button>
+          )}
           <div className="mx-3 my-1 h-px bg-border/60" />
           <button
             type="button"
@@ -110,20 +121,32 @@ export function ProductsView() {
   const { user } = useAuth();
   const { products, loading, error, reload, changeStock, remove, update } =
     useProducts(user?.username);
+  const { categories } = useCategories();
 
   const [query, setQuery] = useState("");
+  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
   const [modal, setModal] = useState<ModalState>({ kind: "none" });
 
+  const activeCount = products.filter((p) => p.active).length;
   const atLimit =
     user?.maxProducts !== null &&
     user?.maxProducts !== undefined &&
-    products.length >= user.maxProducts;
+    activeCount >= user.maxProducts;
 
   const filtered = useMemo(() => {
+    let result = products;
+
+    if (filterCategoryId !== null) {
+      result = result.filter((p) => p.categoryId === filterCategoryId);
+    }
+
     const term = query.trim().toLowerCase();
-    if (!term) return products;
-    return products.filter((p) => p.name.toLowerCase().includes(term));
-  }, [products, query]);
+    if (term) {
+      result = result.filter((p) => p.name.toLowerCase().includes(term));
+    }
+
+    return result;
+  }, [products, query, filterCategoryId]);
 
   const confirmDelete = useCallback(async () => {
     if (modal.kind !== "delete") return;
@@ -133,7 +156,12 @@ export function ProductsView() {
 
   const confirmEdit = useCallback(async () => {
     if (modal.kind !== "edit" || !modal.product.id) return;
-    await update(modal.product, modal.name, modal.description);
+    await update(modal.product, {
+      name: modal.name,
+      description: modal.description,
+      categoryId: modal.categoryId,
+      minStock: Math.max(0, Number(modal.minStock) || 0),
+    });
     setModal({ kind: "none" });
   }, [modal, update]);
 
@@ -160,7 +188,7 @@ export function ProductsView() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {!atLimit && (
-          <LinkButton href="/cargar" variant="primary" className="mx-auto w-fit shrink-0 sm:order-2 sm:mx-0">
+          <LinkButton href="/cargar" variant="primary" className="mx-auto w-fit shrink-0 sm:order-3 sm:mx-0">
             <PlusIcon className="h-4 w-4" />
             {t(ui.products.add)}
           </LinkButton>
@@ -172,6 +200,22 @@ export function ProductsView() {
           placeholder={t(ui.products.search)}
           className="w-full rounded-2xl border border-border bg-surface px-5 py-2.5 text-lg caret-brand text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10 sm:order-1 sm:py-2.5 sm:rounded-xl sm:px-4 sm:text-base"
         />
+        {categories.length > 0 && (
+          <select
+            value={filterCategoryId ?? ""}
+            onChange={(e) =>
+              setFilterCategoryId(e.target.value ? Number(e.target.value) : null)
+            }
+            className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:order-2 sm:max-w-48 sm:rounded-xl"
+          >
+            <option value="">{t(ui.products.allCategories)}</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {loading && (
@@ -232,12 +276,35 @@ export function ProductsView() {
                     key={product.id ?? product.name}
                     className={`border-b border-border/50 transition-colors hover:bg-brand-soft/10 ${
                       index % 2 === 1 ? "bg-muted/15" : ""
+                    } ${!product.active ? "opacity-50" : ""} ${
+                      product.lowStock && product.active
+                        ? "border-l-[3px] border-l-accent"
+                        : ""
                     }`}
                   >
                     <td className="border-r border-border/50 px-4 py-3 md:px-5">
-                      <span className="break-words font-heading text-base font-semibold leading-snug text-foreground md:text-lg">
-                        {product.name}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="break-words font-heading text-base font-semibold leading-snug text-foreground md:text-lg">
+                            {product.name}
+                          </span>
+                          {!product.active && (
+                            <span className="shrink-0 rounded-full bg-subtle/10 px-2 py-0.5 text-xs font-medium text-subtle">
+                              {t(ui.products.frozen)}
+                            </span>
+                          )}
+                          {product.lowStock && product.active && (
+                            <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent-foreground">
+                              {t(ui.products.lowStock)}
+                            </span>
+                          )}
+                        </div>
+                        {product.categoryName && (
+                          <span className="text-xs font-medium text-subtle">
+                            {product.categoryName}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="hidden border-r border-border/50 px-5 py-3 md:table-cell">
                       <span className="line-clamp-1 text-base text-subtle">
@@ -245,32 +312,38 @@ export function ProductsView() {
                       </span>
                     </td>
                     <td className="border-r border-border/50 px-2 py-3 md:px-5">
-                      <div className="flex items-center justify-center gap-1.5 md:gap-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setModal({ kind: "stock", product, delta: -1, quantity: "1" })
-                          }
-                          disabled={product.stock <= 0}
-                          className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-muted text-sm font-medium text-foreground transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-40 md:h-9 md:w-9 md:text-base"
-                        >
-                          −
-                        </button>
-                        <span
-                          className={`flex h-8 min-w-9 items-center justify-center rounded-lg px-2 font-heading text-sm font-bold tabular-nums md:h-9 md:min-w-11 md:px-3 md:text-base ${stockBadge(product.stock)}`}
-                        >
+                      {product.active ? (
+                        <div className="flex items-center justify-center gap-1.5 md:gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModal({ kind: "stock", product, delta: -1, quantity: "1" })
+                            }
+                            disabled={product.stock <= 0}
+                            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-muted text-sm font-medium text-foreground transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-40 md:h-9 md:w-9 md:text-base"
+                          >
+                            −
+                          </button>
+                          <span
+                            className={`flex h-8 min-w-9 items-center justify-center rounded-lg px-2 font-heading text-sm font-bold tabular-nums md:h-9 md:min-w-11 md:px-3 md:text-base ${stockBadge(product)}`}
+                          >
+                            {product.stock}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModal({ kind: "stock", product, delta: 1, quantity: "1" })
+                            }
+                            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-brand text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-dark md:h-9 md:w-9 md:text-base"
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="flex items-center justify-center font-heading text-sm font-bold tabular-nums text-subtle md:text-base">
                           {product.stock}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setModal({ kind: "stock", product, delta: 1, quantity: "1" })
-                          }
-                          className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-brand text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-dark md:h-9 md:w-9 md:text-base"
-                        >
-                          +
-                        </button>
-                      </div>
+                      )}
                     </td>
                     <td className="px-2 py-3">
                       <div className="flex justify-center">
@@ -283,6 +356,11 @@ export function ProductsView() {
                               product,
                               name: product.name,
                               description: product.description,
+                              categoryId: product.categoryId,
+                              minStock: String(product.minStock ?? 0),
+                              showAdvanced:
+                                (product.categoryId ?? null) !== null ||
+                                (product.minStock ?? 0) > 0,
                             })
                           }
                           onDelete={() => setModal({ kind: "delete", product })}
@@ -323,14 +401,41 @@ export function ProductsView() {
                 {modal.product.description}
               </p>
             </div>
-            <div>
-              <span className="text-xs font-medium uppercase tracking-wide text-subtle">
-                {t(ui.products.stock)}
-              </span>
-              <p className="mt-0.5 font-heading text-2xl font-bold text-brand">
-                {modal.product.stock}
-              </p>
+            {modal.product.categoryName && (
+              <div>
+                <span className="text-xs font-medium uppercase tracking-wide text-subtle">
+                  {t(ui.products.categoryLabel)}
+                </span>
+                <p className="mt-0.5 text-base text-foreground">
+                  {modal.product.categoryName}
+                </p>
+              </div>
+            )}
+            <div className="flex gap-6">
+              <div>
+                <span className="text-xs font-medium uppercase tracking-wide text-subtle">
+                  {t(ui.products.stock)}
+                </span>
+                <p className="mt-0.5 font-heading text-2xl font-bold text-brand">
+                  {modal.product.stock}
+                </p>
+              </div>
+              {(modal.product.minStock ?? 0) > 0 && (
+                <div>
+                  <span className="text-xs font-medium uppercase tracking-wide text-subtle">
+                    {t(ui.products.minStockLabel)}
+                  </span>
+                  <p className="mt-0.5 font-heading text-2xl font-bold text-accent-foreground">
+                    {modal.product.minStock}
+                  </p>
+                </div>
+              )}
             </div>
+            {modal.product.lowStock && (
+              <p className="rounded-lg bg-accent-soft/60 px-3 py-2 text-sm font-semibold text-accent-foreground">
+                {t(ui.products.lowStock)}
+              </p>
+            )}
           </div>
         )}
       </ConfirmModal>
@@ -378,6 +483,63 @@ export function ProductsView() {
                 })
               }
             />
+
+            <button
+              type="button"
+              onClick={() =>
+                setModal({ ...modal, showAdvanced: !modal.showAdvanced })
+              }
+              className="flex cursor-pointer items-center gap-2 self-start rounded-lg px-1 py-1 text-sm font-semibold text-brand transition-colors hover:text-brand-dark"
+            >
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${modal.showAdvanced ? "rotate-180" : ""}`}
+              />
+              {t(ui.products.advancedOptions)}
+            </button>
+
+            {modal.showAdvanced && (
+              <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm font-medium text-foreground">
+                    {t(ui.products.categoryLabel)}
+                  </span>
+                  <select
+                    value={modal.categoryId ?? ""}
+                    onChange={(e) =>
+                      setModal({
+                        ...modal,
+                        categoryId: e.target.value
+                          ? Number(e.target.value)
+                          : null,
+                      })
+                    }
+                    className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
+                  >
+                    <option value="">{t(ui.products.noCategory)}</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <TextField
+                  label={t(ui.products.minStockLabel)}
+                  name="edit-minStock"
+                  type="number"
+                  min={0}
+                  hint={t(ui.products.minStockHint)}
+                  value={modal.minStock}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      minStock: (e.target as HTMLInputElement).value,
+                    })
+                  }
+                />
+              </div>
+            )}
           </div>
         )}
       </ConfirmModal>

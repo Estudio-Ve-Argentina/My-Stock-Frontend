@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { decodeJwt, isTokenValid } from "@/lib/auth/jwt";
 import { fetchMe, logout as apiLogout } from "@/lib/api/auth";
+import { getUserDetail } from "@/lib/api/user";
 import { isMockEnabled } from "@/lib/api/mock";
 import { registerSessionExpiredHandler } from "@/lib/api/client";
 import {
@@ -28,6 +29,8 @@ export interface SessionUser {
   roles: string[];
   planName: string;
   maxProducts: number | null;
+  planExpiresAt: string | null;
+  autoRenew: boolean;
 }
 
 export interface AuthContextValue {
@@ -35,6 +38,7 @@ export interface AuthContextValue {
   ready: boolean;
   signIn: (token: string, refreshToken: string, fallbackUsername?: string) => void;
   signOut: () => void;
+  refreshUser: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -57,6 +61,8 @@ function userFromToken(
     roles: claims?.roles ?? [],
     planName: "FREE",
     maxProducts: null,
+    planExpiresAt: null,
+    autoRenew: true,
   };
 }
 
@@ -78,6 +84,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             roles: me.roles,
             planName: me.planName,
             maxProducts: me.maxProducts,
+          };
+        });
+        return getUserDetail(me.id);
+      })
+      .then((detail) => {
+        if (!detail) return;
+        setUser((current) => {
+          if (current?.username !== baseUser.username) return current;
+          return {
+            ...current,
+            planExpiresAt: detail.planExpiresAt,
+            autoRenew: detail.autoRenew,
           };
         });
       })
@@ -112,6 +130,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [hydrateFromBackend],
   );
 
+  const refreshUser = useCallback(() => {
+    if (!user) return;
+    hydrateFromBackend(user);
+  }, [user, hydrateFromBackend]);
+
   const signOut = useCallback(() => {
     const refresh = readRefreshCookie();
     if (refresh) {
@@ -131,8 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, ready, signIn, signOut }),
-    [user, ready, signIn, signOut],
+    () => ({ user, ready, signIn, signOut, refreshUser }),
+    [user, ready, signIn, signOut, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

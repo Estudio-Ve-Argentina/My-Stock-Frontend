@@ -16,8 +16,14 @@ interface PlanCardProps {
 export function PlanCard({ plan, current = false, action, index = 0 }: PlanCardProps) {
   const { t } = useLanguage();
   const reduceMotion = useReducedMotion();
-  const highlighted = plan.id === "pro" || plan.id === "pro-annual";
-  const best = plan.id === "pro-annual";
+  const isPro = plan.id !== "free";
+  const isAnnual = plan.id === "pro-annual";
+  const periodLabel =
+    plan.priceUsd === 0
+      ? ""
+      : plan.durationDays === 365
+        ? ` ${t(ui.plans.perYear)}`
+        : ` ${t(ui.plans.perMonth)}`;
 
   return (
     <motion.div
@@ -27,11 +33,9 @@ export function PlanCard({ plan, current = false, action, index = 0 }: PlanCardP
       whileHover={reduceMotion ? undefined : { y: -8, scale: 1.02 }}
       transition={{ type: "spring", stiffness: 260, damping: 18, delay: index * 0.12 }}
       className={`relative flex h-full cursor-pointer flex-col gap-3 overflow-hidden rounded-2xl border p-4 text-foreground transition-shadow md:gap-5 md:p-6 ${
-        best
-          ? "border-brand/30 bg-brand-soft/60 shadow-[0_16px_48px_-8px_rgba(22,163,74,0.25)] hover:shadow-[0_24px_56px_-8px_rgba(22,163,74,0.35)]"
-          : highlighted
-            ? "border-brand/25 bg-brand-soft/50 shadow-[0_14px_40px_-8px_rgba(22,163,74,0.20)] hover:shadow-[0_20px_48px_-8px_rgba(22,163,74,0.30)]"
-            : "border-brand/20 bg-brand-soft/45 shadow-[0_12px_36px_-8px_rgba(22,163,74,0.16)] hover:shadow-[0_18px_44px_-8px_rgba(22,163,74,0.26)]"
+        isPro
+          ? "border-brand/25 bg-brand-soft/50 shadow-[0_14px_40px_-8px_rgba(22,163,74,0.20)] hover:shadow-[0_20px_48px_-8px_rgba(22,163,74,0.30)]"
+          : "border-brand/20 bg-brand-soft/45 shadow-[0_12px_36px_-8px_rgba(22,163,74,0.16)] hover:shadow-[0_18px_44px_-8px_rgba(22,163,74,0.26)]"
       }`}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-brand/40 via-brand/20 to-transparent" />
@@ -43,20 +47,15 @@ export function PlanCard({ plan, current = false, action, index = 0 }: PlanCardP
               {t(ui.account.current)}
             </span>
           )}
-          {best && !current && (
-            <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-brand-foreground">
-              Best value
-            </span>
-          )}
-          {plan.id === "pro" && !current && (
+          {isAnnual && !current && (
             <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-semibold text-brand-foreground">
-              Popular
+              {t(ui.plans.bestValue)}
             </span>
           )}
         </div>
         <p className="mt-1 font-heading text-2xl font-bold tracking-tight md:mt-2 md:text-4xl">
           {plan.priceUsd === 0 ? "$0" : `$${plan.priceUsd}`}
-          <span className="text-xs font-medium text-subtle md:text-base"> /mes</span>
+          <span className="text-xs font-medium text-subtle md:text-base">{periodLabel}</span>
         </p>
       </div>
 

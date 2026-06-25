@@ -1,4 +1,4 @@
-import type { Locale, Localized, Plan } from "./site.types";
+import type { Locale, Localized, Plan, PlanId } from "./site.types";
 
 interface AppConfig {
   name: string;
@@ -10,8 +10,6 @@ interface AppConfig {
   };
   plans: Plan[];
 }
-
-const FREE_PRODUCT_LIMIT = 10;
 
 export const appConfig: AppConfig = {
   name: "My-Stock",
@@ -26,55 +24,60 @@ export const appConfig: AppConfig = {
       id: "free",
       name: { es: "Gratis", en: "Free" },
       priceUsd: 0,
-      productLimit: FREE_PRODUCT_LIMIT,
+      productLimit: 10,
+      durationDays: 0,
       features: {
         es: [
           "Hasta 10 productos",
           "Control de stock en tiempo real",
-          "Una sola cuenta",
+          "Historial de movimientos",
         ],
         en: [
           "Up to 10 products",
           "Real-time stock control",
-          "Single account",
+          "Movement history",
         ],
       },
     },
     {
-      id: "pro",
-      name: { es: "Mensual", en: "Monthly" },
-      priceUsd: 6.5,
-      productLimit: null,
+      id: "pro-monthly",
+      name: { es: "Pro Mensual", en: "Pro Monthly" },
+      priceUsd: 6,
+      productLimit: 120,
+      durationDays: 30,
       features: {
         es: [
-          "Productos ilimitados",
+          "Hasta 120 productos",
           "Control de stock en tiempo real",
+          "Historial de movimientos",
           "Soporte prioritario",
         ],
         en: [
-          "Unlimited products",
+          "Up to 120 products",
           "Real-time stock control",
+          "Movement history",
           "Priority support",
         ],
       },
     },
     {
       id: "pro-annual",
-      name: { es: "Anual", en: "Annual" },
-      priceUsd: 4,
-      productLimit: null,
+      name: { es: "Pro Anual", en: "Pro Annual" },
+      priceUsd: 48,
+      productLimit: 120,
+      durationDays: 365,
       features: {
         es: [
-          "Productos ilimitados",
+          "Hasta 120 productos",
           "Control de stock en tiempo real",
+          "Historial de movimientos",
           "Soporte prioritario",
-          "Ahorrás un 38%",
         ],
         en: [
-          "Unlimited products",
+          "Up to 120 products",
           "Real-time stock control",
+          "Movement history",
           "Priority support",
-          "Save 38%",
         ],
       },
     },
@@ -87,6 +90,26 @@ export function planById(id: Plan["id"]): Plan {
     throw new Error(`Unknown plan: ${id}`);
   }
   return plan;
+}
+
+const BACKEND_PLAN_MAP: Record<string, PlanId> = {
+  FREE: "free",
+  PRO_MONTHLY: "pro-monthly",
+  PRO_ANNUAL: "pro-annual",
+};
+
+const CONFIG_TO_BACKEND_ID: Record<PlanId, number> = {
+  free: 1,
+  "pro-monthly": 2,
+  "pro-annual": 3,
+};
+
+export function configIdFromBackend(backendName: string): PlanId {
+  return BACKEND_PLAN_MAP[backendName] ?? "free";
+}
+
+export function backendIdFromConfig(configId: PlanId): number {
+  return CONFIG_TO_BACKEND_ID[configId];
 }
 
 export const marketing = {
@@ -152,8 +175,8 @@ export const marketing = {
   pricing: {
     title: { es: "Precios claros", en: "Clear pricing" },
     subtitle: {
-      es: "Empezá gratis. Cuando tu negocio crece, pasá al plan que más te sirva.",
-      en: "Start free. When your business grows, pick the plan that fits.",
+      es: "Empezá gratis. Cuando tu negocio crece, elegí mensual o anual.",
+      en: "Start free. When your business grows, go monthly or annual.",
     },
   },
 };

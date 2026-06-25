@@ -1,5 +1,6 @@
 "use client";
 
+import { appConfig, configIdFromBackend } from "@/config/app.config";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,17 +8,27 @@ import { useProducts } from "@/hooks/useProducts";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { LogoutIcon } from "./icons";
 
+function formatDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale === "es" ? "es-AR" : "en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function AccountView() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { user, signOut } = useAuth();
   const { products } = useProducts(user?.username);
 
-  const planLabel = user?.planName ?? "FREE";
-  const used = products.length;
+  const planConfigId = configIdFromBackend(user?.planName ?? "FREE");
+  const planConfig = appConfig.plans.find((p) => p.id === planConfigId) ?? appConfig.plans[0];
+  const planLabel = t(planConfig.name);
+  const activeCount = products.filter((p) => p.active).length;
   const usage =
     user?.maxProducts === null || user?.maxProducts === undefined
       ? t(ui.account.unlimited)
-      : `${used} / ${user.maxProducts}`;
+      : `${activeCount} / ${user.maxProducts}`;
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
@@ -50,7 +61,17 @@ export function AccountView() {
           <p className="mt-1 font-heading text-2xl font-bold tracking-tight">
             {planLabel}
           </p>
-          <LinkButton href="/planes" variant="accent" size="sm" className="mt-4">
+          {user?.planExpiresAt && (
+            <p className="mt-1 text-xs opacity-80">
+              {t(ui.plans.expires)}{": "}
+              {formatDate(user.planExpiresAt, locale)}
+              {" · "}
+              {user.autoRenew
+                ? t(ui.plans.renewalActive)
+                : t(ui.plans.renewalCancelled)}
+            </p>
+          )}
+          <LinkButton href="/mi-plan" variant="accent" size="sm" className="mt-4">
             {t(ui.account.upgradeCta)}
           </LinkButton>
         </div>

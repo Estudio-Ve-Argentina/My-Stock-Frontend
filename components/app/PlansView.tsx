@@ -1,77 +1,79 @@
 "use client";
 
-import { appConfig } from "@/config/app.config";
+import { useState } from "react";
+import { appConfig, configIdFromBackend, backendIdFromConfig } from "@/config/app.config";
 import type { PlanId } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { changePlan, cancelPlanRenewal } from "@/lib/api/user";
 import { Button } from "@/components/ui/Button";
-import type { Localized } from "@/config/site.types";
+import { PlansComparisonTable } from "@/components/ui/PlansComparisonTable";
 
-const upgradeWhatsAppUrl = `https://wa.me/${appConfig.support.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Hola! Quiero pasar al plan pago de My-Stock.")}`;
-
-interface FeatureRow {
-  label: Localized;
-  values: Record<string, Localized | boolean>;
+function formatDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale === "es" ? "es-AR" : "en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
-
-const featureRows: FeatureRow[] = [
-  {
-    label: ui.plans.products,
-    values: {
-      free: ui.plans.productsLimit,
-      pro: ui.plans.productsUnlimited,
-      "pro-annual": ui.plans.productsUnlimited,
-    },
-  },
-  {
-    label: ui.plans.realtimeStock,
-    values: { free: true, pro: true, "pro-annual": true },
-  },
-  {
-    label: ui.plans.history,
-    values: { free: true, pro: true, "pro-annual": true },
-  },
-  {
-    label: ui.plans.prioritySupport,
-    values: { free: false, pro: true, "pro-annual": true },
-  },
-  {
-    label: ui.plans.multiUser,
-    values: { free: false, pro: false, "pro-annual": true },
-  },
-  {
-    label: ui.plans.exportData,
-    values: { free: false, pro: true, "pro-annual": true },
-  },
-];
-
-function CheckIcon() {
-  return (
-    <svg className="h-4 w-4 text-brand" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m5 13 4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CrossIcon() {
-  return (
-    <svg className="h-4 w-4 text-subtle/40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-const BACKEND_TO_CONFIG: Record<string, PlanId> = {
-  FREE: "free",
-  PAID: "pro",
-};
 
 export function PlansView() {
-  const { t } = useLanguage();
-  const { user } = useAuth();
-  const currentPlanId = BACKEND_TO_CONFIG[user?.planName ?? "FREE"] ?? "free";
+  const { t, locale } = useLanguage();
+  const { user, refreshUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  const currentPlanId = configIdFromBackend(user?.planName ?? "FREE");
   const currentPlan = appConfig.plans.find((p) => p.id === currentPlanId) ?? appConfig.plans[0];
+  const isFree = currentPlanId === "free";
+  const isPro = currentPlanId === "pro-monthly" || currentPlanId === "pro-annual";
+
+  async function handleChangePlan(targetPlanId: PlanId) {
+    if (!user?.userId || targetPlanId === currentPlanId) {
+      setFeedback(t(ui.plans.alreadyOnPlan));
+      return;
+    }
+    setLoading(true);
+    setFeedback(null);
+    try {
+      await changePlan(user.userId, backendIdFromConfig(targetPlanId));
+      refreshUser();
+      if (targetPlanId === "free") {
+        setFeedback(t(ui.plans.downgradeSuccess));
+      } else if (currentPlanId === "free") {
+        setFeedback(t(ui.plans.upgradeSuccess));
+      } else {
+        setFeedback(t(ui.plans.planChanged));
+      }
+    } catch {
+      setFeedback(t(ui.common.genericError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCancelRenewal() {
+    if (!user?.userId) return;
+    setLoading(true);
+    setFeedback(null);
+    try {
+      await cancelPlanRenewal(user.userId);
+      refreshUser();
+      setFeedback(t(ui.plans.cancelSuccess));
+    } catch {
+      setFeedback(t(ui.common.genericError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const periodLabel =
+    currentPlan.priceUsd === 0
+      ? ""
+      : currentPlan.durationDays === 365
+        ? ` ${t(ui.plans.perYear)}`
+        : ` ${t(ui.plans.perMonth)}`;
 
   return (
     <div className="flex flex-col gap-8">
@@ -86,23 +88,96 @@ export function PlansView() {
         <h2 className="font-heading text-lg font-bold text-foreground">
           {t(ui.plans.yourPlan)}
         </h2>
-        <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface px-5 py-4 shadow-[0_8px_30px_-8px_rgba(22,163,74,0.12)]">
-          <div className="flex flex-col gap-0.5">
-            <span className="font-heading text-base font-bold text-foreground">
-              {t(currentPlan.name)}
-            </span>
-            <span className="text-sm text-subtle">
-              {currentPlan.priceUsd === 0
-                ? "$0 /mes"
-                : `$${currentPlan.priceUsd} /mes`}
-            </span>
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-5 py-4 shadow-[0_8px_30px_-8px_rgba(22,163,74,0.12)]">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-heading text-base font-bold text-foreground">
+                {t(currentPlan.name)}
+              </span>
+              <span className="text-sm text-subtle">
+                ${currentPlan.priceUsd}{periodLabel}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {isFree && (
+                <>
+                  <Button
+                    variant="primary"
+                    disabled={loading}
+                    onClick={() => handleChangePlan("pro-monthly")}
+                  >
+                    {t(ui.plans.upgrade)} — $6{t(ui.plans.perMonth)}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={loading}
+                    onClick={() => handleChangePlan("pro-annual")}
+                  >
+                    {t(ui.plans.upgrade)} — $48{t(ui.plans.perYear)}
+                  </Button>
+                </>
+              )}
+              {currentPlanId === "pro-monthly" && (
+                <Button
+                  variant="primary"
+                  disabled={loading}
+                  onClick={() => handleChangePlan("pro-annual")}
+                >
+                  {t(ui.plans.switchToAnnual)}
+                </Button>
+              )}
+              {currentPlanId === "pro-annual" && (
+                <Button
+                  variant="outline"
+                  disabled={loading}
+                  onClick={() => handleChangePlan("pro-monthly")}
+                >
+                  {t(ui.plans.switchToMonthly)}
+                </Button>
+              )}
+              {isPro && (
+                <Button
+                  variant="ghost"
+                  disabled={loading}
+                  onClick={() => handleChangePlan("free")}
+                  className="text-subtle hover:text-danger"
+                >
+                  {t(ui.plans.downgrade)}
+                </Button>
+              )}
+            </div>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => window.open(upgradeWhatsAppUrl, "_blank")}
-          >
-            {t(ui.plans.changePlan)}
-          </Button>
+
+          {isPro && (
+            <div className="flex flex-col gap-2 border-t border-border pt-3">
+              <p className="text-sm text-subtle">
+                {t(ui.plans.expires)}{": "}
+                {user?.planExpiresAt
+                  ? formatDate(user.planExpiresAt, locale)
+                  : t(ui.plans.neverExpires)}
+              </p>
+              <p className="text-sm text-subtle">
+                {user?.autoRenew
+                  ? t(ui.plans.renewalActive)
+                  : t(ui.plans.renewalCancelled)}
+              </p>
+              {user?.autoRenew && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={loading}
+                  onClick={handleCancelRenewal}
+                  className="self-start text-subtle hover:text-danger"
+                >
+                  {t(ui.plans.cancelRenewal)}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {feedback && (
+            <p className="text-sm font-medium text-brand">{feedback}</p>
+          )}
         </div>
       </section>
 
@@ -110,85 +185,7 @@ export function PlansView() {
         <h2 className="font-heading text-lg font-bold text-foreground">
           {t(ui.plans.compare)}
         </h2>
-        <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-[0_8px_30px_-8px_rgba(22,163,74,0.12)]">
-          <table className="w-full min-w-[480px]">
-            <thead>
-              <tr className="border-b-2 border-border bg-muted/40">
-                <th className="border-r border-border/50 px-5 py-4 text-left font-heading text-base font-semibold uppercase tracking-wider text-subtle">
-                  {t(ui.plans.feature)}
-                </th>
-                {appConfig.plans.map((plan) => (
-                  <th
-                    key={plan.id}
-                    className={`border-r border-border/50 px-5 py-4 text-center font-heading text-base font-semibold last:border-r-0 ${
-                      plan.id === currentPlan.id ? "bg-brand-soft/20 text-brand" : "text-foreground"
-                    }`}
-                  >
-                    {t(plan.name)}
-                    {plan.id === currentPlan.id && (
-                      <span className="ml-1.5 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-dark">
-                        {t(ui.account.current)}
-                      </span>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {featureRows.map((row, index) => (
-                <tr
-                  key={index}
-                  className={`border-b border-border/50 transition-colors hover:bg-muted/30 ${
-                    index % 2 === 1 ? "bg-muted/15" : ""
-                  }`}
-                >
-                  <td className="border-r border-border/50 px-5 py-3.5 font-heading text-base font-medium text-foreground">
-                    {t(row.label)}
-                  </td>
-                  {appConfig.plans.map((plan) => {
-                    const value = row.values[plan.id];
-                    return (
-                      <td
-                        key={plan.id}
-                        className={`border-r border-border/50 px-5 py-3.5 text-center last:border-r-0 ${
-                          plan.id === currentPlan.id ? "bg-brand-soft/10" : ""
-                        }`}
-                      >
-                        {typeof value === "boolean" ? (
-                          <span className="inline-flex justify-center">
-                            {value ? <CheckIcon /> : <CrossIcon />}
-                          </span>
-                        ) : (
-                          <span className="text-base font-medium text-foreground">
-                            {t(value as Localized)}
-                          </span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              <tr className="border-t-2 border-border bg-muted/30">
-                <td className="border-r border-border/50 px-5 py-4 font-heading text-base font-semibold uppercase tracking-wider text-subtle">
-                  Precio
-                </td>
-                {appConfig.plans.map((plan) => (
-                  <td
-                    key={plan.id}
-                    className={`border-r border-border/50 px-5 py-4 text-center last:border-r-0 ${
-                      plan.id === currentPlan.id ? "bg-brand-soft/10" : ""
-                    }`}
-                  >
-                    <span className="font-heading text-lg font-bold text-foreground">
-                      {plan.priceUsd === 0 ? "$0" : `$${plan.priceUsd}`}
-                    </span>
-                    <span className="text-xs text-subtle"> /mes</span>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <PlansComparisonTable highlightPlanId={currentPlanId} />
       </section>
     </div>
   );

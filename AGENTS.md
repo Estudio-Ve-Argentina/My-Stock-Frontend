@@ -86,14 +86,15 @@ components/
 - **`PATCH /api/products/{id}/stock`** con `{ "quantity": N }` es un **delta** (suma/resta), no set. Si el resultado sería negativo → 400.
 - **Productos:** la respuesta siempre incluye `id` (Long). Ownership validada server-side.
 - **Movimientos:** `GET /api/stock-movements/user/{userId}` — el `userId` es el `id` de `/auth/me`. Se generan automáticamente al cambiar stock.
-- **Planes:** existen en la API (`GET /api/plans`). Backend define `FREE` (10 prod) y `PAID` (120 prod, $5).
-- **Upgrade:** `PATCH /api/user/{id}/plan` con `{ "planId": 2 }` cambia el plan directamente (sin pago real por ahora).
+- **Planes:** existen en la API (`GET /api/plans`). Backend define `FREE` (10 prod, $0), `PRO_MONTHLY` (120 prod, $6, 30 días) y `PRO_ANNUAL` (120 prod, $48, 365 días).
+- **Upgrade:** `PATCH /api/user/{id}/plan` con `{ "planId": N }` cambia el plan directamente (sin pago real por ahora). IDs: FREE=1, PRO_MONTHLY=2, PRO_ANNUAL=3.
 
 ## Planes
-- Definidos en el backend: `FREE` (10 productos, $0) y `PAID` (120 productos, $5). Se consultan con `GET /api/plans`.
+- Definidos en el backend: `FREE` (10 productos, $0, sin vencimiento), `PRO_MONTHLY` (120 productos, $6, 30 días) y `PRO_ANNUAL` (120 productos, $48, 365 días). Se consultan con `GET /api/plans` (incluye `durationDays`).
 - El front obtiene el plan del usuario desde `/auth/me` → `planName` y `maxProducts`.
 - Al llegar al límite: se deshabilita "Agregar" y aparece `PlanLimitBanner`.
-- El upgrade llama a `PATCH /api/user/{id}/plan` con `{ "planId": 2 }`. **No hay cobro real todavía — no inventar flujo de pago.**
+- El upgrade llama a `PATCH /api/user/{id}/plan` con `{ "planId": N }` (1=FREE, 2=PRO_MONTHLY, 3=PRO_ANNUAL). **No hay cobro real todavía — no inventar flujo de pago.**
+- Mapeo backend↔config: `configIdFromBackend()` y `backendIdFromConfig()` en `app.config.ts`.
 
 ## Configuración y contenido
 - **Todo lo editable del producto vive en `config/app.config.ts`** (nombre, planes, copy de marketing, contacto). Nunca hardcodear texto, números ni links en componentes.

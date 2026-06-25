@@ -11,6 +11,7 @@ export const ui = {
     delete: { es: "Eliminar", en: "Delete" },
     retry: { es: "Reintentar", en: "Retry" },
     back: { es: "Volver", en: "Back" },
+    backToHome: { es: "Volver a inicio", en: "Back to home" },
     genericError: {
       es: "Algo salió mal. Probá de nuevo.",
       en: "Something went wrong. Try again.",
@@ -21,6 +22,7 @@ export const ui = {
     create: { es: "Cargar producto", en: "Add product" },
     products: { es: "Mis productos", en: "My products" },
     history: { es: "Historial", en: "History" },
+    categories: { es: "Categorías", en: "Categories" },
     plans: { es: "Planes", en: "Plans" },
     account: { es: "Usuario", en: "Account" },
     logout: { es: "Cerrar sesión", en: "Log out" },
@@ -106,10 +108,46 @@ export const ui = {
       en: "You reached the free plan limit.",
     },
     limitDetail: {
-      es: "Pasá al plan pago para cargar productos ilimitados.",
-      en: "Upgrade to the paid plan for unlimited products.",
+      es: "Pasá al plan Pro para cargar hasta 120 productos.",
+      en: "Upgrade to Pro to add up to 120 products.",
     },
-    upgrade: { es: "Pasar a ilimitado", en: "Go unlimited" },
+    frozen: { es: "Congelado", en: "Frozen" },
+    upgrade: { es: "Mejorar plan", en: "Upgrade" },
+    advancedOptions: { es: "Opciones avanzadas", en: "Advanced options" },
+    categoryLabel: { es: "Categoría", en: "Category" },
+    noCategory: { es: "Sin categoría", en: "No category" },
+    allCategories: { es: "Todas las categorías", en: "All categories" },
+    minStockLabel: { es: "Stock mínimo", en: "Minimum stock" },
+    minStockHint: {
+      es: "Te avisa cuando el stock baje a este nivel.",
+      en: "Alerts you when stock drops to this level.",
+    },
+    lowStock: { es: "Stock bajo", en: "Low stock" },
+    newCategory: { es: "Crear categoría", en: "Create category" },
+  },
+  categories: {
+    title: { es: "Categorías", en: "Categories" },
+    subtitle: {
+      es: "Organizá tus productos por categoría.",
+      en: "Organize your products by category.",
+    },
+    create: { es: "Nueva categoría", en: "New category" },
+    nameLabel: { es: "Nombre", en: "Name" },
+    namePlaceholder: { es: "Ej: Bebidas", en: "E.g.: Drinks" },
+    rename: { es: "Renombrar", en: "Rename" },
+    deleteConfirm: {
+      es: "¿Eliminar esta categoría? Los productos no se borran, quedan sin categoría.",
+      en: "Delete this category? Products won't be deleted, they'll be uncategorized.",
+    },
+    empty: {
+      es: "Todavía no creaste ninguna categoría.",
+      en: "You haven't created any categories yet.",
+    },
+    productsCount: { es: "productos", en: "products" },
+    productCount: { es: "producto", en: "product" },
+    created: { es: "¡Categoría creada!", en: "Category created!" },
+    renamed: { es: "Categoría renombrada.", en: "Category renamed." },
+    deleted: { es: "Categoría eliminada.", en: "Category deleted." },
   },
   history: {
     title: { es: "Historial", en: "History" },
@@ -121,6 +159,7 @@ export const ui = {
     created: { es: "Cargado", en: "Created" },
     increased: { es: "Sumó stock", en: "Stock added" },
     decreased: { es: "Restó stock", en: "Stock removed" },
+    modified: { es: "Modificado", en: "Modified" },
     deleted: { es: "Eliminado", en: "Deleted" },
     filterFrom: { es: "Desde", en: "From" },
     filterTo: { es: "Hasta", en: "To" },
@@ -130,8 +169,8 @@ export const ui = {
   plans: {
     title: { es: "Planes", en: "Plans" },
     subtitle: {
-      es: "Empezá gratis. Crecé sin límites por 5 dólares.",
-      en: "Start free. Grow unlimited for 5 dollars.",
+      es: "Empezá gratis. Crecé sin límites con un plan Pro.",
+      en: "Start free. Grow unlimited with a Pro plan.",
     },
     yourPlan: { es: "Tu plan", en: "Your plan" },
     changePlan: { es: "Cambiar de plan", en: "Change plan" },
@@ -139,12 +178,31 @@ export const ui = {
     feature: { es: "Funcionalidad", en: "Feature" },
     products: { es: "Productos", en: "Products" },
     productsLimit: { es: "Hasta 10", en: "Up to 10" },
-    productsUnlimited: { es: "Ilimitados", en: "Unlimited" },
+    paidProductsLimit: { es: "Hasta 120", en: "Up to 120" },
     realtimeStock: { es: "Stock en tiempo real", en: "Real-time stock" },
     history: { es: "Historial de movimientos", en: "Movement history" },
     prioritySupport: { es: "Soporte prioritario", en: "Priority support" },
-    multiUser: { es: "Múltiples usuarios", en: "Multiple users" },
-    exportData: { es: "Exportar datos", en: "Export data" },
+    price: { es: "Precio", en: "Price" },
+    perMonth: { es: "/mes", en: "/mo" },
+    perYear: { es: "/año", en: "/year" },
+    bestValue: { es: "Mejor precio", en: "Best value" },
+    upgrade: { es: "Pasar a Pro", en: "Upgrade to Pro" },
+    switchToAnnual: { es: "Cambiar a Anual", en: "Switch to Annual" },
+    switchToMonthly: { es: "Cambiar a Mensual", en: "Switch to Monthly" },
+    downgrade: { es: "Volver a Gratis", en: "Switch to Free" },
+    cancelRenewal: { es: "Cancelar renovación", en: "Cancel renewal" },
+    renewalActive: { es: "Se renueva automáticamente", en: "Renews automatically" },
+    renewalCancelled: {
+      es: "No se va a renovar — vuelve a Gratis al vencer",
+      en: "Won't renew — switches to Free when it expires",
+    },
+    expires: { es: "Vence el", en: "Expires on" },
+    neverExpires: { es: "Sin vencimiento", en: "No expiration" },
+    upgradeSuccess: { es: "¡Plan actualizado!", en: "Plan updated!" },
+    downgradeSuccess: { es: "Plan cambiado a Gratis.", en: "Switched to Free." },
+    planChanged: { es: "¡Plan cambiado!", en: "Plan changed!" },
+    cancelSuccess: { es: "Renovación cancelada.", en: "Renewal cancelled." },
+    alreadyOnPlan: { es: "Ya tenés este plan.", en: "You're already on this plan." },
   },
   account: {
     title: { es: "Usuario", en: "Account" },
@@ -171,13 +229,273 @@ export const ui = {
     phone: { es: "Teléfono", en: "Phone" },
     instagram: { es: "Instagram", en: "Instagram" },
   },
+  faq: {
+    title: { es: "Preguntas frecuentes", en: "Frequently asked questions" },
+    subtitle: {
+      es: "Todo lo que necesitás saber antes de empezar.",
+      en: "Everything you need to know before getting started.",
+    },
+    items: [
+      {
+        question: { es: "¿My-Stock es gratis?", en: "Is My-Stock free?" },
+        answer: {
+          es: "Sí. El plan gratuito te permite cargar hasta 10 productos sin límite de tiempo. No necesitás tarjeta de crédito para empezar. Cuando tu negocio crezca y necesites más capacidad, podés pasar a un plan Pro (mensual o anual) en cualquier momento desde la sección de planes.",
+          en: "Yes. The free plan lets you add up to 10 products with no time limit. No credit card required to get started. When your business grows and you need more capacity, you can upgrade to a Pro plan (monthly or annual) at any time from the plans section.",
+        },
+      },
+      {
+        question: {
+          es: "¿Puedo cancelar en cualquier momento?",
+          en: "Can I cancel anytime?",
+        },
+        answer: {
+          es: "Sí, podés volver al plan gratuito cuando quieras. Tus productos y tu historial no se borran. Si tenés más de 10 productos activos al bajar de plan, los más antiguos se congelan automáticamente: los podés ver y eliminar, pero no modificar ni cambiar stock. Si después hacés upgrade o eliminás productos activos, se reactivan solos.",
+          en: "Yes, you can switch back to the free plan anytime. Your products and history won't be deleted. If you have more than 10 active products when downgrading, the oldest ones are automatically frozen: you can view and delete them, but not edit or change stock. If you later upgrade or delete active products, they reactivate automatically.",
+        },
+      },
+      {
+        question: {
+          es: "¿Mis datos están seguros?",
+          en: "Is my data secure?",
+        },
+        answer: {
+          es: "Toda la comunicación entre tu navegador y nuestros servidores está cifrada con HTTPS. Las contraseñas se almacenan con hash seguro y nunca en texto plano. Cada usuario solo puede acceder a sus propios datos: no hay forma de ver el inventario de otra cuenta. Realizamos copias de seguridad periódicas para prevenir pérdida de información.",
+          en: "All communication between your browser and our servers is encrypted with HTTPS. Passwords are stored using secure hashing and never in plain text. Each user can only access their own data: there's no way to view another account's inventory. We perform periodic backups to prevent data loss.",
+        },
+      },
+      {
+        question: {
+          es: "¿Puedo usar My-Stock desde el celular?",
+          en: "Can I use My-Stock on my phone?",
+        },
+        answer: {
+          es: "Sí, la app está diseñada con enfoque mobile-first para funcionar perfecto en cualquier dispositivo: celular, tablet o computadora. La interfaz se adapta automáticamente al tamaño de tu pantalla, así podés cargar productos o ajustar stock desde el mostrador de tu negocio sin necesitar una computadora.",
+          en: "Yes, the app is designed with a mobile-first approach to work perfectly on any device: phone, tablet or computer. The interface adapts automatically to your screen size, so you can add products or adjust stock from your shop counter without needing a computer.",
+        },
+      },
+      {
+        question: {
+          es: "¿Qué pasa si llego al límite de productos?",
+          en: "What happens when I reach the product limit?",
+        },
+        answer: {
+          es: "Te avisamos con un banner dentro de la app cuando llegues al límite. Podés pasar al plan Pro en un par de clicks para cargar hasta 120 productos. Los productos que ya tenés no se borran: simplemente se bloquea la carga de nuevos hasta que hagas el upgrade.",
+          en: "We'll notify you with a banner inside the app when you reach the limit. You can upgrade to the Pro plan in a couple of clicks to add up to 120 products. Your existing products won't be deleted: new product creation is simply blocked until you upgrade.",
+        },
+      },
+      {
+        question: {
+          es: "¿Necesito instalar algo?",
+          en: "Do I need to install anything?",
+        },
+        answer: {
+          es: "No. My-Stock funciona directamente desde el navegador, sin descargas ni instalaciones. Podés acceder desde Chrome, Firefox, Safari o cualquier navegador moderno. Solo necesitás una conexión a internet y tu usuario y contraseña.",
+          en: "No. My-Stock works directly from your browser, no downloads or installations needed. You can access it from Chrome, Firefox, Safari or any modern browser. All you need is an internet connection and your username and password.",
+        },
+      },
+      {
+        question: {
+          es: "¿El plan Pro se renueva solo?",
+          en: "Does the Pro plan renew automatically?",
+        },
+        answer: {
+          es: "Sí, los planes Pro se renuevan automáticamente (cada 30 días el mensual, cada 365 el anual). Si preferís no renovar, podés cancelar la renovación desde la sección de planes. Tu plan sigue activo hasta que venza, y después volvés al plan gratuito. Si tenés más de 10 productos activos, los más antiguos se congelan automáticamente.",
+          en: "Yes, Pro plans renew automatically (every 30 days for monthly, every 365 for annual). If you prefer not to renew, you can cancel the renewal from the plans section. Your plan stays active until it expires, then you switch back to the free plan. If you have more than 10 active products, the oldest ones are automatically frozen.",
+        },
+      },
+      {
+        question: {
+          es: "¿Qué pasa si me olvido la contraseña?",
+          en: "What if I forget my password?",
+        },
+        answer: {
+          es: "Si creaste tu cuenta con Google, podés seguir entrando con ese mismo botón sin necesidad de contraseña. Si usás usuario y contraseña, contactanos por WhatsApp o email y te ayudamos a recuperar el acceso a tu cuenta lo antes posible.",
+          en: "If you created your account with Google, you can keep logging in with that same button without needing a password. If you use a username and password, contact us via WhatsApp or email and we'll help you recover access to your account as soon as possible.",
+        },
+      },
+    ] as { question: Localized; answer: Localized }[],
+  },
+  terms: {
+    title: { es: "Términos y condiciones", en: "Terms & conditions" },
+    lastUpdated: { es: "Última actualización", en: "Last updated" },
+    intro: {
+      es: "Al acceder y utilizar My-Stock (en adelante, \"el Servicio\"), aceptás los siguientes términos y condiciones. Si no estás de acuerdo con alguno de estos puntos, te pedimos que no utilices la plataforma. Estos términos constituyen un acuerdo legal entre vos (\"el Usuario\") y My-Stock (\"nosotros\").",
+      en: "By accessing and using My-Stock (hereinafter, \"the Service\"), you agree to the following terms and conditions. If you do not agree with any of these points, please do not use the platform. These terms constitute a legal agreement between you (\"the User\") and My-Stock (\"we\" or \"us\").",
+    },
+    sections: [
+      {
+        heading: { es: "1. Descripción del servicio", en: "1. Service description" },
+        body: {
+          es: "My-Stock es una plataforma web de gestión de inventario diseñada para pequeños y medianos negocios. El Servicio permite registrar productos, controlar cantidades de stock en tiempo real, visualizar el historial de movimientos y gestionar la cuenta del usuario. El Servicio se proporciona a través de navegadores web y no requiere la instalación de software adicional. Nos reservamos el derecho de modificar, suspender o discontinuar cualquier funcionalidad del Servicio en cualquier momento, con o sin previo aviso.",
+          en: "My-Stock is a web-based inventory management platform designed for small and medium businesses. The Service allows you to register products, control stock quantities in real time, view movement history and manage your user account. The Service is provided through web browsers and does not require the installation of additional software. We reserve the right to modify, suspend or discontinue any functionality of the Service at any time, with or without prior notice.",
+        },
+      },
+      {
+        heading: { es: "2. Registro y cuentas de usuario", en: "2. Registration and user accounts" },
+        body: {
+          es: "Para utilizar el Servicio debés crear una cuenta proporcionando información veraz y actualizada. Podés registrarte con usuario y contraseña o a través de Google OAuth. Sos el único responsable de mantener la confidencialidad de tus credenciales de acceso y de todas las actividades que se realicen bajo tu cuenta. Debés notificarnos inmediatamente si sospechás de un uso no autorizado de tu cuenta. Nos reservamos el derecho de suspender o eliminar cuentas que violen estos términos, que permanezcan inactivas por un período prolongado, o que se utilicen con fines fraudulentos o ilegales.",
+          en: "To use the Service you must create an account by providing truthful and up-to-date information. You can register with a username and password or through Google OAuth. You are solely responsible for maintaining the confidentiality of your access credentials and for all activities carried out under your account. You must notify us immediately if you suspect unauthorized use of your account. We reserve the right to suspend or delete accounts that violate these terms, remain inactive for a prolonged period, or are used for fraudulent or illegal purposes.",
+        },
+      },
+      {
+        heading: { es: "3. Planes, precios y facturación", en: "3. Plans, pricing and billing" },
+        body: {
+          es: "My-Stock ofrece un plan gratuito con funcionalidades limitadas y planes pagos con funcionalidades extendidas. El plan gratuito no tiene costo ni fecha de expiración. Los planes pagos se facturan de forma mensual o anual según la opción elegida. Los precios están expresados en dólares estadounidenses (USD) y pueden estar sujetos a impuestos según tu jurisdicción. Nos reservamos el derecho de modificar los precios con un aviso previo de al menos 30 días. Los cambios de precio no afectarán el período de facturación en curso. Al realizar el upgrade, el cambio se aplica de forma inmediata. Al hacer downgrade, mantenés el acceso al plan actual hasta el final del período facturado.",
+          en: "My-Stock offers a free plan with limited features and paid plans with extended features. The free plan has no cost or expiration date. Paid plans are billed monthly or annually depending on the chosen option. Prices are expressed in US dollars (USD) and may be subject to taxes depending on your jurisdiction. We reserve the right to modify prices with at least 30 days prior notice. Price changes will not affect the current billing period. When upgrading, the change takes effect immediately. When downgrading, you maintain access to the current plan until the end of the billed period.",
+        },
+      },
+      {
+        heading: { es: "4. Uso aceptable", en: "4. Acceptable use" },
+        body: {
+          es: "Te comprometés a utilizar el Servicio únicamente para fines legítimos de gestión de inventario. Queda prohibido: (a) intentar acceder a datos o cuentas de otros usuarios; (b) utilizar el Servicio para almacenar contenido ilegal, ofensivo o que infrinja derechos de terceros; (c) realizar ingeniería inversa, descompilar o intentar obtener el código fuente del Servicio; (d) utilizar bots, scrapers u otras herramientas automatizadas para acceder al Servicio sin autorización; (e) sobrecargar intencionalmente los servidores o la infraestructura del Servicio; (f) revender, sublicenciar o redistribuir el acceso al Servicio sin autorización escrita.",
+          en: "You agree to use the Service solely for legitimate inventory management purposes. It is prohibited to: (a) attempt to access other users' data or accounts; (b) use the Service to store illegal or offensive content or content that infringes third-party rights; (c) reverse engineer, decompile or attempt to obtain the source code of the Service; (d) use bots, scrapers or other automated tools to access the Service without authorization; (e) intentionally overload the servers or infrastructure of the Service; (f) resell, sublicense or redistribute access to the Service without written authorization.",
+        },
+      },
+      {
+        heading: { es: "5. Propiedad intelectual", en: "5. Intellectual property" },
+        body: {
+          es: "Todo el contenido del Servicio, incluyendo pero no limitado a diseño, código, textos, gráficos, logotipos e interfaz de usuario, es propiedad de My-Stock y está protegido por las leyes de propiedad intelectual aplicables. Los datos de inventario que cargues en la plataforma son de tu propiedad. My-Stock no reclama ningún derecho sobre tus datos y solo los utiliza para brindarte el Servicio.",
+          en: "All content of the Service, including but not limited to design, code, text, graphics, logos and user interface, is the property of My-Stock and is protected by applicable intellectual property laws. The inventory data you upload to the platform is your property. My-Stock does not claim any rights over your data and only uses it to provide you with the Service.",
+        },
+      },
+      {
+        heading: { es: "6. Disponibilidad y mantenimiento", en: "6. Availability and maintenance" },
+        body: {
+          es: "Nos esforzamos por mantener el Servicio disponible las 24 horas del día, los 7 días de la semana. Sin embargo, pueden ocurrir interrupciones planificadas para mantenimiento o actualizaciones, así como interrupciones no planificadas por causas técnicas o de fuerza mayor. No garantizamos un porcentaje de disponibilidad específico (SLA) y no seremos responsables por daños derivados de la indisponibilidad temporal del Servicio.",
+          en: "We strive to keep the Service available 24 hours a day, 7 days a week. However, planned interruptions may occur for maintenance or updates, as well as unplanned interruptions due to technical causes or force majeure. We do not guarantee a specific availability percentage (SLA) and we will not be liable for damages arising from temporary unavailability of the Service.",
+        },
+      },
+      {
+        heading: { es: "7. Limitación de responsabilidad", en: "7. Limitation of liability" },
+        body: {
+          es: "El Servicio se proporciona \"tal cual\" y \"según disponibilidad\", sin garantías de ningún tipo, ya sean expresas o implícitas. En la máxima medida permitida por la ley aplicable, My-Stock no será responsable por: (a) pérdidas de datos, ganancias o ingresos; (b) daños indirectos, incidentales, especiales o consecuentes; (c) interrupciones del negocio derivadas del uso o la imposibilidad de uso del Servicio; (d) acciones de terceros, incluyendo accesos no autorizados a tu cuenta. Nuestra responsabilidad total en cualquier caso no excederá el monto que hayas pagado por el Servicio en los últimos 12 meses.",
+          en: "The Service is provided \"as is\" and \"as available\", without warranties of any kind, whether express or implied. To the maximum extent permitted by applicable law, My-Stock will not be liable for: (a) loss of data, profits or revenue; (b) indirect, incidental, special or consequential damages; (c) business interruptions arising from the use or inability to use the Service; (d) actions of third parties, including unauthorized access to your account. Our total liability in any case will not exceed the amount you have paid for the Service in the last 12 months.",
+        },
+      },
+      {
+        heading: { es: "8. Terminación", en: "8. Termination" },
+        body: {
+          es: "Podés cancelar tu cuenta en cualquier momento contactándonos por los canales de soporte. Al cancelar, tus datos se mantendrán almacenados durante 30 días por si decidís reactivar tu cuenta. Pasado ese plazo, los datos serán eliminados de forma permanente. Nos reservamos el derecho de terminar o suspender tu acceso al Servicio de forma inmediata y sin previo aviso si violás estos términos o si tu uso del Servicio perjudica a otros usuarios o a la plataforma.",
+          en: "You can cancel your account at any time by contacting us through our support channels. Upon cancellation, your data will be kept stored for 30 days in case you decide to reactivate your account. After that period, data will be permanently deleted. We reserve the right to terminate or suspend your access to the Service immediately and without prior notice if you violate these terms or if your use of the Service harms other users or the platform.",
+        },
+      },
+      {
+        heading: { es: "9. Modificaciones a los términos", en: "9. Changes to terms" },
+        body: {
+          es: "Podemos actualizar estos términos en cualquier momento. Los cambios significativos se comunicarán a través de un aviso en la plataforma o por email con al menos 15 días de anticipación. El uso continuado del Servicio después de la entrada en vigencia de los nuevos términos implica tu aceptación de los mismos. Si no estás de acuerdo con los cambios, podés cancelar tu cuenta antes de que entren en vigencia.",
+          en: "We may update these terms at any time. Significant changes will be communicated through a notice on the platform or by email with at least 15 days advance notice. Continued use of the Service after the new terms take effect implies your acceptance of them. If you do not agree with the changes, you can cancel your account before they take effect.",
+        },
+      },
+      {
+        heading: { es: "10. Legislación aplicable", en: "10. Governing law" },
+        body: {
+          es: "Estos términos se rigen por las leyes de la República Argentina. Cualquier disputa que surja en relación con estos términos o con el uso del Servicio será sometida a la jurisdicción de los tribunales competentes de la Ciudad de Mar del Plata, Provincia de Buenos Aires, renunciando ambas partes a cualquier otro fuero que pudiera corresponder.",
+          en: "These terms are governed by the laws of the Argentine Republic. Any dispute arising in connection with these terms or the use of the Service shall be submitted to the jurisdiction of the competent courts of the City of Mar del Plata, Province of Buenos Aires, both parties waiving any other jurisdiction that may apply.",
+        },
+      },
+      {
+        heading: { es: "11. Contacto", en: "11. Contact" },
+        body: {
+          es: "Si tenés preguntas sobre estos términos o necesitás asistencia, podés contactarnos por WhatsApp al +54 9 223 668 0996 o por email a info@estudiove.com. Nuestro equipo responde dentro de las 48 horas hábiles.",
+          en: "If you have questions about these terms or need assistance, you can contact us via WhatsApp at +54 9 223 668 0996 or by email at info@estudiove.com. Our team responds within 48 business hours.",
+        },
+      },
+    ] as { heading: Localized; body: Localized }[],
+  },
+  privacy: {
+    title: { es: "Política de privacidad", en: "Privacy policy" },
+    lastUpdated: { es: "Última actualización", en: "Last updated" },
+    intro: {
+      es: "En My-Stock nos tomamos tu privacidad en serio. Esta política describe qué información recopilamos, cómo la usamos, cómo la protegemos y cuáles son tus derechos. Al utilizar nuestro servicio, aceptás las prácticas descritas en esta política.",
+      en: "At My-Stock we take your privacy seriously. This policy describes what information we collect, how we use it, how we protect it and what your rights are. By using our service, you agree to the practices described in this policy.",
+    },
+    sections: [
+      {
+        heading: { es: "1. Información que recopilamos", en: "1. Information we collect" },
+        body: {
+          es: "Recopilamos información que proporcionás directamente al usar el Servicio. Datos de registro: nombre, apellido, nombre de usuario y contraseña (o los datos de tu cuenta de Google si usás OAuth). Datos de inventario: nombres de productos, descripciones, cantidades de stock y el historial de movimientos que generás al operar. Datos de uso: registramos de forma automática información técnica como la fecha y hora de acceso, tipo de navegador y dispositivo. Esta información se utiliza exclusivamente para mejorar el funcionamiento del Servicio. No recopilamos datos sensibles como información financiera, ubicación precisa, datos biométricos ni información de salud.",
+          en: "We collect information you provide directly when using the Service. Registration data: name, last name, username and password (or your Google account data if you use OAuth). Inventory data: product names, descriptions, stock quantities and the movement history you generate while operating. Usage data: we automatically log technical information such as access date and time, browser type and device. This information is used exclusively to improve the Service. We do not collect sensitive data such as financial information, precise location, biometric data or health information.",
+        },
+      },
+      {
+        heading: { es: "2. Cómo usamos tu información", en: "2. How we use your information" },
+        body: {
+          es: "Utilizamos tu información para los siguientes fines: (a) proporcionar, operar y mantener el Servicio de gestión de inventario; (b) autenticar tu identidad y proteger tu cuenta; (c) procesar cambios de plan y gestionar tu suscripción; (d) enviarte comunicaciones importantes sobre el Servicio, como cambios en los términos, mantenimientos programados o alertas de seguridad; (e) responder a tus consultas de soporte; (f) generar estadísticas agregadas y anónimas sobre el uso del Servicio para mejorar la plataforma. No usamos tu información para fines publicitarios ni la compartimos con anunciantes. No realizamos perfilado de usuarios con fines de marketing.",
+          en: "We use your information for the following purposes: (a) to provide, operate and maintain the inventory management Service; (b) to authenticate your identity and protect your account; (c) to process plan changes and manage your subscription; (d) to send you important communications about the Service, such as changes to terms, scheduled maintenance or security alerts; (e) to respond to your support inquiries; (f) to generate aggregate and anonymous statistics about Service usage to improve the platform. We do not use your information for advertising purposes nor do we share it with advertisers. We do not profile users for marketing purposes.",
+        },
+      },
+      {
+        heading: { es: "3. Compartición de datos con terceros", en: "3. Data sharing with third parties" },
+        body: {
+          es: "No vendemos, alquilamos ni compartimos tu información personal con terceros para fines comerciales. Podemos compartir información únicamente en los siguientes casos: (a) con proveedores de infraestructura (hosting, bases de datos) que necesitan acceso a los datos para operar el Servicio, siempre bajo acuerdos de confidencialidad; (b) con Google, en caso de que uses OAuth para autenticarte, limitado a los datos necesarios para el proceso de autenticación; (c) cuando sea requerido por ley, orden judicial o autoridad competente; (d) para proteger nuestros derechos legales o prevenir fraudes o amenazas de seguridad.",
+          en: "We do not sell, rent or share your personal information with third parties for commercial purposes. We may share information only in the following cases: (a) with infrastructure providers (hosting, databases) that need access to data to operate the Service, always under confidentiality agreements; (b) with Google, if you use OAuth for authentication, limited to the data necessary for the authentication process; (c) when required by law, court order or competent authority; (d) to protect our legal rights or prevent fraud or security threats.",
+        },
+      },
+      {
+        heading: { es: "4. Almacenamiento y seguridad", en: "4. Storage and security" },
+        body: {
+          es: "Tus datos se almacenan en servidores seguros con cifrado en tránsito (HTTPS/TLS) y en reposo. Las contraseñas se almacenan usando algoritmos de hash unidireccional (bcrypt) y nunca en texto plano. Implementamos medidas de seguridad que incluyen: control de acceso basado en roles, validación de ownership en cada petición a la API, tokens JWT con expiración corta (30 minutos) y refresh tokens con expiración de 7 días, protección contra ataques comunes (CSRF, XSS, inyección SQL). Realizamos copias de seguridad periódicas de la base de datos. A pesar de estas medidas, ningún sistema es 100% seguro. Si detectamos una brecha de seguridad que afecte tus datos, te notificaremos lo antes posible.",
+          en: "Your data is stored on secure servers with encryption in transit (HTTPS/TLS) and at rest. Passwords are stored using one-way hash algorithms (bcrypt) and never in plain text. We implement security measures including: role-based access control, ownership validation on every API request, JWT tokens with short expiration (30 minutes) and refresh tokens with 7-day expiration, protection against common attacks (CSRF, XSS, SQL injection). We perform periodic database backups. Despite these measures, no system is 100% secure. If we detect a security breach affecting your data, we will notify you as soon as possible.",
+        },
+      },
+      {
+        heading: { es: "5. Retención de datos", en: "5. Data retention" },
+        body: {
+          es: "Mantenemos tus datos mientras tu cuenta esté activa. Si cancelás tu cuenta, conservamos los datos durante 30 días por si decidís reactivarla. Pasado ese período, los datos se eliminan de forma permanente de nuestros servidores y copias de seguridad. Los registros de uso anónimos y estadísticos pueden conservarse de forma indefinida ya que no contienen información personal identificable.",
+          en: "We retain your data as long as your account is active. If you cancel your account, we keep the data for 30 days in case you decide to reactivate it. After that period, data is permanently deleted from our servers and backups. Anonymous and statistical usage logs may be retained indefinitely as they do not contain personally identifiable information.",
+        },
+      },
+      {
+        heading: { es: "6. Tus derechos", en: "6. Your rights" },
+        body: {
+          es: "Tenés derecho a: (a) acceder a tus datos personales en cualquier momento desde tu cuenta; (b) modificar o corregir tu información personal; (c) exportar tus datos de inventario (disponible en planes pagos); (d) solicitar la eliminación completa de tu cuenta y todos los datos asociados; (e) solicitar información sobre qué datos tenemos almacenados sobre vos. Para ejercer cualquiera de estos derechos, podés usar las opciones de tu cuenta o contactarnos directamente. Respondemos a todas las solicitudes dentro de los 30 días hábiles.",
+          en: "You have the right to: (a) access your personal data at any time from your account; (b) modify or correct your personal information; (c) export your inventory data (available on paid plans); (d) request complete deletion of your account and all associated data; (e) request information about what data we have stored about you. To exercise any of these rights, you can use your account options or contact us directly. We respond to all requests within 30 business days.",
+        },
+      },
+      {
+        heading: { es: "7. Cookies y almacenamiento local", en: "7. Cookies and local storage" },
+        body: {
+          es: "Utilizamos las siguientes tecnologías de almacenamiento en el navegador: cookies de autenticación (mystock_token y mystock_refresh) para mantener tu sesión activa de forma segura; localStorage para recordar tu preferencia de idioma (es/en). No utilizamos cookies de rastreo, cookies de terceros ni cookies publicitarias. No implementamos herramientas de analítica de terceros como Google Analytics. Las cookies de sesión se eliminan automáticamente al cerrar sesión o al expirar.",
+          en: "We use the following browser storage technologies: authentication cookies (mystock_token and mystock_refresh) to keep your session active securely; localStorage to remember your language preference (es/en). We do not use tracking cookies, third-party cookies or advertising cookies. We do not implement third-party analytics tools such as Google Analytics. Session cookies are automatically deleted upon logout or expiration.",
+        },
+      },
+      {
+        heading: { es: "8. Menores de edad", en: "8. Minors" },
+        body: {
+          es: "El Servicio no está dirigido a menores de 16 años. No recopilamos intencionalmente información de menores. Si descubrimos que hemos recopilado datos de un menor sin el consentimiento de su tutor legal, los eliminaremos de inmediato. Si sos padre o tutor y creés que tu hijo nos ha proporcionado información personal, contactanos.",
+          en: "The Service is not intended for minors under 16 years of age. We do not intentionally collect information from minors. If we discover that we have collected data from a minor without the consent of their legal guardian, we will delete it immediately. If you are a parent or guardian and believe your child has provided us with personal information, please contact us.",
+        },
+      },
+      {
+        heading: { es: "9. Transferencias internacionales", en: "9. International transfers" },
+        body: {
+          es: "Tus datos pueden ser procesados en servidores ubicados fuera de tu país de residencia. En estos casos, nos aseguramos de que los proveedores de infraestructura cumplan con estándares de seguridad equivalentes y que existan acuerdos de protección de datos adecuados.",
+          en: "Your data may be processed on servers located outside your country of residence. In such cases, we ensure that infrastructure providers comply with equivalent security standards and that adequate data protection agreements are in place.",
+        },
+      },
+      {
+        heading: { es: "10. Cambios a esta política", en: "10. Changes to this policy" },
+        body: {
+          es: "Podemos actualizar esta política de privacidad periódicamente. Los cambios significativos se comunicarán a través de un aviso en la plataforma con al menos 15 días de anticipación. Te recomendamos revisar esta página periódicamente para estar al tanto de cualquier modificación.",
+          en: "We may update this privacy policy periodically. Significant changes will be communicated through a notice on the platform with at least 15 days advance notice. We recommend reviewing this page periodically to stay informed of any modifications.",
+        },
+      },
+      {
+        heading: { es: "11. Contacto", en: "11. Contact" },
+        body: {
+          es: "Si tenés preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos personales, podés contactarnos por WhatsApp al +54 9 223 668 0996 o por email a info@estudiove.com.",
+          en: "If you have questions about this privacy policy or about the processing of your personal data, you can contact us via WhatsApp at +54 9 223 668 0996 or by email at info@estudiove.com.",
+        },
+      },
+    ] as { heading: Localized; body: Localized }[],
+  },
   footer: {
     nav: { es: "Navegación", en: "Navigation" },
+    product: { es: "Producto", en: "Product" },
     legal: { es: "Legal", en: "Legal" },
     home: { es: "Inicio", en: "Home" },
     login: { es: "Iniciar sesión", en: "Log in" },
     signup: { es: "Registro", en: "Sign up" },
-    panel: { es: "Panel", en: "Dashboard" },
     faq: { es: "Preguntas frecuentes", en: "FAQ" },
     terms: { es: "Términos y condiciones", en: "Terms & conditions" },
     privacy: { es: "Privacidad", en: "Privacy" },

@@ -21,7 +21,7 @@ export const config = {
     "/cargar/:path*",
     "/productos/:path*",
     "/historial/:path*",
-    "/planes/:path*",
+    "/mi-plan/:path*",
     "/cuenta/:path*",
   ],
 };

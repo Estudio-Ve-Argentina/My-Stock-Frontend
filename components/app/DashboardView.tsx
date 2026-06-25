@@ -20,6 +20,7 @@ export function DashboardView() {
   const { movements } = useMovements(user?.userId);
 
   const stats = useMemo(() => {
+    const active = products.filter((product) => product.active);
     const today = movements.filter((movement) => isToday(movement.at));
     const modified = new Set(
       today
@@ -27,10 +28,10 @@ export function DashboardView() {
         .map((movement) => movement.productName),
     );
     return {
-      total: products.length,
+      total: active.length,
       movementsToday: today.length,
       modifiedToday: modified.size,
-      outOfStock: products.filter((product) => product.stock === 0).length,
+      outOfStock: active.filter((product) => product.stock === 0).length,
     };
   }, [products, movements]);
 

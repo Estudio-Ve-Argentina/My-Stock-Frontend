@@ -11,6 +11,7 @@ const typeMeta: Record<
   created: { label: ui.history.created, chip: "bg-brown-soft text-brown", sign: "" },
   increased: { label: ui.history.increased, chip: "bg-brand-soft text-brand-dark", sign: "+" },
   decreased: { label: ui.history.decreased, chip: "bg-accent-soft text-accent-foreground", sign: "−" },
+  modified: { label: ui.history.modified, chip: "bg-brown-soft text-brown", sign: "" },
   deleted: { label: ui.history.deleted, chip: "bg-danger/10 text-danger", sign: "" },
 };
 

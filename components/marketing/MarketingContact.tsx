@@ -27,11 +27,15 @@ const contactInfo = [
   { icon: MailIcon, label: "info@estudiove.com", href: "mailto:info@estudiove.com" },
 ];
 
-export function MarketingContact() {
+interface MarketingContactProps {
+  compact?: boolean;
+}
+
+export function MarketingContact({ compact = false }: MarketingContactProps) {
   const { t } = useLanguage();
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 pb-6 pt-12 md:px-8 md:pb-12 md:pt-24">
+    <div className={`mx-auto w-full max-w-6xl px-6 md:px-8 ${compact ? "py-3 md:py-6" : "pb-6 pt-16 md:pb-12 md:pt-24"}`}>
       <div className="grid gap-8 md:gap-12 md:grid-cols-2 md:items-start">
         <div className="flex flex-col gap-4 md:gap-6">
           <div>
