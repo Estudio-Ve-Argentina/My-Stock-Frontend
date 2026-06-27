@@ -1,12 +1,19 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
 import { appConfig, configIdFromBackend } from "@/config/app.config";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
+import { updateProfile, changePassword } from "@/lib/api/user";
+import { resendVerification } from "@/lib/api/auth";
+import { ApiError } from "@/lib/api/client";
 import { Button, LinkButton } from "@/components/ui/Button";
-import { LogoutIcon } from "./icons";
+import { TextField } from "@/components/ui/TextField";
+import { Spinner } from "@/components/ui/Spinner";
+import { useToast } from "@/components/ui/Toast";
+import { LogoutIcon, CheckIcon } from "./icons";
 
 function formatDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleDateString(locale === "es" ? "es-AR" : "en-US", {
@@ -14,6 +21,196 @@ function formatDate(iso: string, locale: string): string {
     month: "long",
     year: "numeric",
   });
+}
+
+function ProfileSection() {
+  const { t } = useLanguage();
+  const { user, refreshUser } = useAuth();
+
+  const [name, setName] = useState(user?.name ?? "");
+  const [lastName, setLastName] = useState(user?.lastName ?? "");
+  const [pending, setPending] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!user?.userId) return;
+    setError(null);
+    setPending(true);
+    setSaved(false);
+    try {
+      await updateProfile(user.userId, { name, lastName: lastName || undefined });
+      refreshUser();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError(t(ui.common.genericError));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="mb-4 font-heading text-lg font-bold text-foreground">
+        {t(ui.account.profile)}
+      </h2>
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
+          <TextField
+            label={t(ui.auth.name)}
+            name="name"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextField
+            label={t(ui.auth.lastname)}
+            name="lastname"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
+
+        {error && <p className="text-sm text-danger">{error}</p>}
+
+        <div className="flex items-center gap-3">
+          <Button type="submit" variant="primary" size="sm" disabled={pending}>
+            {pending ? <Spinner /> : t(ui.common.save)}
+          </Button>
+          {saved && (
+            <span className="text-sm font-medium text-brand-dark">
+              {t(ui.account.profileSaved)}
+            </span>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function ChangePasswordSection() {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [pending, setPending] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!user?.userId) return;
+    setError(null);
+    setPending(true);
+    setSaved(false);
+    try {
+      await changePassword(user.userId, { currentPassword, newPassword });
+      setCurrentPassword("");
+      setNewPassword("");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (caught) {
+      const backendMsg = caught instanceof ApiError ? caught.message : "";
+      setError(backendMsg || t(ui.common.genericError));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="mb-4 font-heading text-lg font-bold text-foreground">
+        {t(ui.account.changePassword)}
+      </h2>
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <TextField
+          label={t(ui.account.currentPassword)}
+          name="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          required
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+        />
+        <TextField
+          label={t(ui.account.newPassword)}
+          name="newPassword"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          required
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
+
+        {error && <p className="text-sm text-danger">{error}</p>}
+
+        <div className="flex items-center gap-3">
+          <Button type="submit" variant="primary" size="sm" disabled={pending}>
+            {pending ? <Spinner /> : t(ui.account.changePassword)}
+          </Button>
+          {saved && (
+            <span className="text-sm font-medium text-brand-dark">
+              {t(ui.account.passwordChanged)}
+            </span>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function EmailVerificationSection() {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const { show } = useToast();
+  const [sending, setSending] = useState(false);
+
+  async function handleResend() {
+    if (!user?.username || sending) return;
+    setSending(true);
+    try {
+      await resendVerification(user.username);
+      show(t(ui.account.verificationSent));
+    } catch {
+      /* silently fail */
+    } finally {
+      setSending(false);
+    }
+  }
+
+  if (user?.emailVerified) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-brand/20 bg-brand/5 p-6">
+        <CheckIcon className="h-5 w-5 shrink-0 text-brand-dark" />
+        <p className="text-sm font-medium text-brand-dark">
+          {t(ui.account.emailVerified)}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-6 sm:flex-row sm:items-center">
+      <div className="flex-1">
+        <p className="text-sm font-medium text-amber-900">
+          {t(ui.account.verifyEmail)}
+        </p>
+        <p className="mt-0.5 text-xs text-amber-700">{user?.username}</p>
+      </div>
+      <Button
+        variant="primary"
+        size="sm"
+        onClick={handleResend}
+        disabled={sending}
+      >
+        {sending ? <Spinner /> : t(ui.account.resendVerification)}
+      </Button>
+    </div>
+  );
 }
 
 export function AccountView() {
@@ -30,28 +227,56 @@ export function AccountView() {
       ? t(ui.account.unlimited)
       : `${activeCount} / ${user.maxProducts}`;
 
+  const fullName = [user?.name, user?.lastName].filter(Boolean).join(" ");
+  const displayName = fullName || user?.username;
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <header className="flex flex-col gap-1">
+      <header>
         <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-          {t(ui.account.title)}
+          {displayName}
         </h1>
-        <p className="text-sm text-subtle">{t(ui.account.data)}</p>
+        <div className="mt-1 flex items-center justify-between">
+          <p className="text-sm text-subtle">{t(ui.account.data)}</p>
+          <button
+            type="button"
+            onClick={signOut}
+            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-danger px-3.5 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-danger/85"
+          >
+            <LogoutIcon className="h-4 w-4" />
+            {t(ui.account.logout)}
+          </button>
+        </div>
       </header>
+
+      <EmailVerificationSection />
 
       <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-6">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brown text-2xl font-bold text-brown-foreground">
-          {user?.username?.charAt(0).toUpperCase()}
+          {(user?.name || user?.username)?.charAt(0).toUpperCase()}
         </span>
         <div>
           <p className="font-heading text-lg font-bold text-foreground">
-            @{user?.username}
+            {fullName || user?.username}
           </p>
           <p className="text-sm text-subtle">
+            {user?.username}
+            {user?.emailVerified && (
+              <span className="ml-2 inline-flex items-center gap-1 text-brand-dark">
+                <CheckIcon className="h-3.5 w-3.5" />
+                {t(ui.account.emailVerified)}
+              </span>
+            )}
+          </p>
+          <p className="text-xs text-subtle">
             {planLabel} · {usage} {t(ui.account.productsUsed)}
           </p>
         </div>
       </div>
+
+      <ProfileSection />
+
+      {user?.hasPassword && <ChangePasswordSection />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-6 text-brand-foreground">
@@ -86,10 +311,6 @@ export function AccountView() {
         </div>
       </div>
 
-      <Button variant="outline" onClick={signOut} className="self-start">
-        <LogoutIcon className="h-4 w-4" />
-        {t(ui.account.logout)}
-      </Button>
     </div>
   );
 }

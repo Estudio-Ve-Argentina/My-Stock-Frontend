@@ -31,6 +31,8 @@ export interface UserMeResponse {
   planName: string;
   maxProducts: number;
   roles: string[];
+  emailVerified: boolean;
+  hasPassword: boolean;
 }
 
 export interface UserDetailResponse {

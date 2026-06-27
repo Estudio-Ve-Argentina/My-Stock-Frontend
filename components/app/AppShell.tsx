@@ -4,22 +4,25 @@ import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { EmailVerificationBanner } from "./EmailVerificationBanner";
 import { SidebarNav } from "./SidebarNav";
 import { MenuIcon, CloseIcon } from "./icons";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="min-h-dvh lg:flex">
+    <div className="flex min-h-dvh flex-col lg:flex-row">
       <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 lg:block">
         <SidebarNav />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur lg:hidden">
           <button
             type="button"
             aria-label={t(ui.nav.menu)}
@@ -31,6 +34,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Wordmark href="/panel" />
           <span className="w-10" />
         </header>
+
+        {user && !user.emailVerified && <EmailVerificationBanner />}
 
         <main className="relative flex-1">
           <div className="texture-dots pointer-events-none absolute inset-0 opacity-100" />

@@ -97,9 +97,9 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
             </span>
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-dark-foreground">
-                {user?.username}
+                {user?.name || user?.username}
               </span>
-              <span className="block text-xs text-dark-subtle">{t(ui.nav.account)}</span>
+              <span className="block truncate text-xs text-dark-subtle">{user?.username}</span>
             </span>
           </Link>
           <button

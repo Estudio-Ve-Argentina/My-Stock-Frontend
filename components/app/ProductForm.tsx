@@ -120,7 +120,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                 onChange={(e) =>
                   setCategoryId(e.target.value ? Number(e.target.value) : null)
                 }
-                className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
+                className="select-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-base font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
               >
                 <option value="">{t(ui.products.noCategory)}</option>
                 {categories.map((cat) => (

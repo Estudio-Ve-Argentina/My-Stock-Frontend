@@ -173,6 +173,17 @@ export function ProductsView() {
     setModal({ kind: "none" });
   }, [modal, changeStock]);
 
+  const stepStock = useCallback(
+    (direction: 1 | -1) => {
+      if (modal.kind !== "stock") return;
+      const current = parseInt(modal.quantity, 10) || 0;
+      const next = current + direction;
+      if (next < 1) return;
+      setModal({ ...modal, quantity: String(next) });
+    },
+    [modal],
+  );
+
   const closeModal = useCallback(() => setModal({ kind: "none" }), []);
 
   return (
@@ -206,7 +217,7 @@ export function ProductsView() {
             onChange={(e) =>
               setFilterCategoryId(e.target.value ? Number(e.target.value) : null)
             }
-            className="rounded-2xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:order-2 sm:max-w-48 sm:rounded-xl"
+            className="select-field w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:order-2 sm:max-w-52 sm:rounded-xl"
           >
             <option value="">{t(ui.products.allCategories)}</option>
             {categories.map((cat) => (
@@ -358,9 +369,7 @@ export function ProductsView() {
                               description: product.description,
                               categoryId: product.categoryId,
                               minStock: String(product.minStock ?? 0),
-                              showAdvanced:
-                                (product.categoryId ?? null) !== null ||
-                                (product.minStock ?? 0) > 0,
+                              showAdvanced: false,
                             })
                           }
                           onDelete={() => setModal({ kind: "delete", product })}
@@ -513,7 +522,7 @@ export function ProductsView() {
                           : null,
                       })
                     }
-                    className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
+                    className="select-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-base font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
                   >
                     <option value="">{t(ui.products.noCategory)}</option>
                     {categories.map((cat) => (
@@ -559,19 +568,36 @@ export function ProductsView() {
         onCancel={closeModal}
       >
         {modal.kind === "stock" && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-1">
             <span className="text-xs font-medium text-subtle">
               {t(ui.products.stockQuantity)}
             </span>
-            <input
-              type="number"
-              min="1"
-              value={modal.quantity}
-              onChange={(e) =>
-                setModal({ ...modal, quantity: e.target.value })
-              }
-              className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
-            />
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => stepStock(-1)}
+                disabled={parseInt(modal.quantity, 10) <= 1}
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-muted text-lg font-bold text-foreground transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="1"
+                value={modal.quantity}
+                onChange={(e) =>
+                  setModal({ ...modal, quantity: e.target.value })
+                }
+                className="w-20 rounded-xl border border-border bg-surface px-2 py-2 text-center font-heading text-2xl font-bold tabular-nums text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
+              />
+              <button
+                type="button"
+                onClick={() => stepStock(1)}
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-brand text-lg font-bold text-brand-foreground transition-colors hover:bg-brand-dark"
+              >
+                +
+              </button>
+            </div>
           </div>
         )}
       </ConfirmModal>

@@ -20,7 +20,7 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/panel";
 
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -30,15 +30,19 @@ export function LoginForm() {
     setError(null);
     setPending(true);
     try {
-      const response = await login({ username, password });
+      const response = await login({ email, password });
       signIn(response.jwtToken, response.refreshToken, response.username);
       router.replace(next);
     } catch (caught) {
-      setError(
-        caught instanceof ApiError && caught.status === 401
-          ? t(ui.auth.invalid)
-          : t(ui.common.genericError),
-      );
+      if (caught instanceof ApiError) {
+        setError(
+          caught.status === 401
+            ? t(ui.auth.invalid)
+            : caught.message || t(ui.common.genericError),
+        );
+      } else {
+        setError(t(ui.common.genericError));
+      }
       setPending(false);
     }
   }
@@ -51,12 +55,13 @@ export function LoginForm() {
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <TextField
-          label={t(ui.auth.username)}
-          name="username"
-          autoComplete="username"
+          label={t(ui.auth.email)}
+          name="email"
+          type="email"
+          autoComplete="email"
           required
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
         />
         <TextField
           label={t(ui.auth.password)}
@@ -74,6 +79,13 @@ export function LoginForm() {
           {pending ? <Spinner /> : t(ui.auth.loginCta)}
         </Button>
       </form>
+
+      <Link
+        href="/forgot-password"
+        className="mt-3 block text-center text-sm font-medium text-subtle hover:text-brand-dark hover:underline"
+      >
+        {t(ui.auth.forgotPassword)}
+      </Link>
 
       <div className="my-5 flex items-center gap-3 text-xs text-subtle">
         <span className="h-px flex-1 bg-border" />

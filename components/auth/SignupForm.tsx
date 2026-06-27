@@ -7,6 +7,7 @@ import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { signup } from "@/lib/api/auth";
+import { ApiError } from "@/lib/api/client";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
@@ -20,27 +21,48 @@ export function SignupForm() {
   const [form, setForm] = useState({
     name: "",
     lastname: "",
-    username: "",
+    email: "",
     password: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
 
   function update(field: keyof typeof form) {
-    return (event: { target: { value: string } }) =>
+    return (event: { target: { value: string } }) => {
       setForm((current) => ({ ...current, [field]: event.target.value }));
+      setFieldErrors((current) => {
+        if (!current[field]) return current;
+        const next = { ...current };
+        delete next[field];
+        return next;
+      });
+    };
   }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    setFieldErrors({});
     setPending(true);
     try {
-      const response = await signup(form);
+      const response = await signup({
+        email: form.email,
+        password: form.password,
+        name: form.name,
+        lastname: form.lastname || undefined,
+      });
       signIn(response.jwtToken, response.refreshToken, response.username);
       router.replace("/panel");
-    } catch {
-      setError(t(ui.common.genericError));
+    } catch (caught) {
+      if (caught instanceof ApiError) {
+        if (Object.keys(caught.fieldErrors).length > 0) {
+          setFieldErrors(caught.fieldErrors);
+        }
+        setError(caught.message || t(ui.common.genericError));
+      } else {
+        setError(t(ui.common.genericError));
+      }
       setPending(false);
     }
   }
@@ -60,36 +82,42 @@ export function SignupForm() {
             required
             value={form.name}
             onChange={update("name")}
+            error={fieldErrors.name}
           />
           <TextField
             label={t(ui.auth.lastname)}
             name="lastname"
             autoComplete="family-name"
-            required
             value={form.lastname}
             onChange={update("lastname")}
+            error={fieldErrors.lastname}
           />
         </div>
         <TextField
-          label={t(ui.auth.username)}
-          name="username"
-          autoComplete="username"
+          label={t(ui.auth.email)}
+          name="email"
+          type="email"
+          autoComplete="email"
           required
-          value={form.username}
-          onChange={update("username")}
+          value={form.email}
+          onChange={update("email")}
+          error={fieldErrors.email}
         />
         <TextField
           label={t(ui.auth.password)}
           name="password"
           type="password"
           autoComplete="new-password"
-          minLength={6}
+          minLength={8}
           required
           value={form.password}
           onChange={update("password")}
+          error={fieldErrors.password}
         />
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && !Object.keys(fieldErrors).length && (
+          <p className="text-sm text-danger">{error}</p>
+        )}
 
         <Button type="submit" variant="primary" fullWidth disabled={pending}>
           {pending ? <Spinner /> : t(ui.auth.signupCta)}

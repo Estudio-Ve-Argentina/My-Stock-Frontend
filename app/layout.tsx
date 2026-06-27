@@ -4,6 +4,7 @@ import "./globals.css";
 import { appConfig } from "@/config/app.config";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const sans = Geist({
   subsets: ["latin"],
@@ -34,7 +35,9 @@ export default function RootLayout({
     <html lang={appConfig.defaultLocale} className={`${sans.variable} ${heading.variable} h-full antialiased`}>
       <body className="min-h-full font-body">
         <LanguageProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

@@ -39,7 +39,7 @@ Las rutas (`app/`) **solo componen**; la lógica vive en `components/`, `hooks/`
 app/
   layout.tsx          providers globales (Language + Auth) + metadata
   page.tsx            landing pública (compone components/marketing/*)
-  (auth)/             login · signup · oauth2/success   (layout centrado)
+  (auth)/             login · signup · oauth2/success · forgot-password · reset-password   (layout centrado)
   (app)/              ZONA PROTEGIDA — layout con <AppGuard> + <AppShell> (sidebar)
     panel/            dashboard: stats del día + actividad reciente (default al loguear)
     cargar/           formulario de alta de producto
@@ -60,8 +60,8 @@ hooks/                useLanguage · useAuth · useProducts · useMovements · u
 components/
   providers/          LanguageProvider · AuthProvider
   ui/                 Section · Button/LinkButton · TextField · Carousel · Spinner · PlanCard · Wordmark · SectionHeading · Reveal · LanguageToggle
-  auth/               LoginForm · SignupForm · GoogleButton · OAuthCallback
-  app/                AppShell · AppGuard · SidebarNav · icons · DashboardView · StatCard · MovementItem · CargarView · ProductsView · ProductCard · StockStepper · ProductForm · HistorialView · PlansView · PlanLimitBanner · AccountView
+  auth/               LoginForm · SignupForm · GoogleButton · OAuthCallback · ForgotPasswordForm · ResetPasswordForm
+  app/                AppShell · AppGuard · SidebarNav · EmailVerificationBanner · icons · DashboardView · StatCard · MovementItem · CargarView · ProductsView · ProductCard · StockStepper · ProductForm · HistorialView · PlansView · PlanLimitBanner · AccountView
   marketing/          MarketingHeader · Hero · Features · Pricing · Footer
 ```
 
@@ -72,15 +72,23 @@ components/
 - **Listas → `grid`** por defecto.
 
 ## Autenticación
-- Login/signup contra `/auth/*`; responden con `jwtToken` + `refreshToken`.
-- OAuth2 Google: front redirige a `GET /oauth2/authorization/google` → backend redirige a `{frontend}/oauth2/success?code=<uuid>` → front llama `POST /auth/oauth2/exchange?code=<uuid>` y recibe ambos tokens.
+- **Signup** (email+password): `POST /auth/signup` con `{ email, password, name, lastname? }`. Devuelve JWT + refresh token. Backend crea usuario con `username = email`, envía email de verificación (24h), el usuario puede usar la app sin verificarse.
+- **Signup** (OAuth/Google): front redirige a `GET /oauth2/authorization/google` → backend redirige a `{frontend}/oauth2/success?code=<uuid>` → front llama `POST /auth/oauth2/exchange?code=<uuid>` y recibe ambos tokens. El usuario queda con `emailVerified = true` y `hasPassword = false`.
+- **Login**: `POST /auth/login` con `{ email, password }`. Usuarios OAuth no pueden loguearse con password.
 - **Access token (JWT)** en cookie `mystock_token` (30 min) — `proxy.ts` lo lee server-side para proteger rutas.
 - **Refresh token** en cookie `mystock_refresh` (7 días). Cuando el access expira (401), el front llama `POST /auth/refresh?refreshToken=<valor>` y obtiene nuevo access token.
-- **`GET /auth/me`** devuelve `{ id, name, lastName, username, planName, maxProducts, roles }`. Se usa para obtener la identidad y datos del plan del usuario autenticado.
-- `AuthProvider` mantiene la sesión. Se consume con `useAuth()` → `{ user, ready, signIn, signOut }`.
+- **`GET /auth/me`** devuelve `{ id, name, lastName, username, planName, maxProducts, roles, emailVerified, hasPassword }`.
+- `AuthProvider` mantiene la sesión. Se consume con `useAuth()` → `{ user, ready, signIn, signOut, refreshUser }`.
 - **Doble guard:** `proxy.ts` (server, antes de render) + `<AppGuard>` (cliente, evita flash y maneja expiración).
-- En `signup` se envían `name`, `lastname`, `username`, `password`. El backend asigna rol `USER` y plan `FREE` automáticamente.
 - **Logout:** `POST /auth/logout?refreshToken=<valor>` borra el refresh del backend; el front limpia ambas cookies.
+- **Verificación de email:** `POST /auth/resend-verification?email=` reenvía el email. Banner en AppShell si `emailVerified == false`.
+- **Forgot password:** `POST /auth/forgot-password?email=` envía email con link a `/reset-password?token=...` (1h expiry). Rechaza usuarios OAuth.
+- **Reset password:** `POST /auth/reset-password` con `{ token, newPassword }`.
+- **Cambiar password** (autenticado): `PATCH /api/user/{id}/password` con `{ currentPassword, newPassword }`. Solo visible si `hasPassword == true`.
+- **Editar perfil:** `PATCH /api/user/{id}/profile` con `{ name, lastName? }`.
+
+### Formato de errores del backend
+Todas las respuestas de error siguen `{ status, message, errors? }`. `message` es siempre un string legible, `errors` (opcional) es un mapa `campo:mensaje` para validaciones de formulario. `ApiError` en `lib/api/client.ts` expone `.message`, `.status` y `.fieldErrors`. Password mínimo: 8 caracteres + mayúscula + minúscula + número.
 
 ### Semántica confirmada
 - **`PATCH /api/products/{id}/stock`** con `{ "quantity": N }` es un **delta** (suma/resta), no set. Si el resultado sería negativo → 400.

@@ -51,11 +51,11 @@ function authResponse(username: string): AuthResponse {
 }
 
 export function mockLogin(input: LoginInput): Promise<AuthResponse> {
-  return Promise.resolve(authResponse(input.username));
+  return Promise.resolve(authResponse(input.email));
 }
 
 export function mockSignup(input: SignupInput): Promise<AuthResponse> {
-  return Promise.resolve(authResponse(input.username));
+  return Promise.resolve(authResponse(input.email));
 }
 
 const STORE_PREFIX = "mystock_mock_products_";

@@ -31,6 +31,10 @@ export interface SessionUser {
   maxProducts: number | null;
   planExpiresAt: string | null;
   autoRenew: boolean;
+  name: string;
+  lastName: string;
+  emailVerified: boolean;
+  hasPassword: boolean;
 }
 
 export interface AuthContextValue {
@@ -63,6 +67,10 @@ function userFromToken(
     maxProducts: null,
     planExpiresAt: null,
     autoRenew: true,
+    name: "",
+    lastName: "",
+    emailVerified: false,
+    hasPassword: true,
   };
 }
 
@@ -84,6 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             roles: me.roles,
             planName: me.planName,
             maxProducts: me.maxProducts,
+            name: me.name,
+            lastName: me.lastName,
+            emailVerified: me.emailVerified,
+            hasPassword: me.hasPassword,
           };
         });
         return getUserDetail(me.id);

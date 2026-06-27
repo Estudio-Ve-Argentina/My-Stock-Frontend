@@ -7,11 +7,17 @@ import {
 
 export class ApiError extends Error {
   status: number;
+  fieldErrors: Record<string, string>;
 
-  constructor(status: number, message: string) {
+  constructor(
+    status: number,
+    message: string,
+    fieldErrors?: Record<string, string>,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.fieldErrors = fieldErrors ?? {};
   }
 }
 
@@ -55,18 +61,31 @@ async function tryRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
-async function parseError(response: Response): Promise<string> {
+interface ParsedError {
+  message: string;
+  fieldErrors?: Record<string, string>;
+}
+
+async function parseError(response: Response): Promise<ParsedError> {
   try {
     const data = await response.json();
-    return data.message ?? data.error ?? response.statusText;
+    if (typeof data === "string") return { message: data };
+    const message =
+      data.message || data.error || data.detail || response.statusText;
+    const fieldErrors =
+      data.errors && typeof data.errors === "object"
+        ? (data.errors as Record<string, string>)
+        : undefined;
+    return { message, fieldErrors };
   } catch {
-    return response.statusText;
+    return { message: response.statusText };
   }
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    throw new ApiError(response.status, await parseError(response));
+    const parsed = await parseError(response);
+    throw new ApiError(response.status, parsed.message, parsed.fieldErrors);
   }
   if (response.status === 204) {
     return undefined as T;
@@ -99,7 +118,8 @@ export async function apiRequest<T>(
     const newToken = await tryRefresh();
     if (!newToken) {
       onSessionExpired?.();
-      throw new ApiError(401, await parseError(response));
+      const parsed = await parseError(response);
+      throw new ApiError(401, parsed.message, parsed.fieldErrors);
     }
     headers.Authorization = `Bearer ${newToken}`;
     const retry = await fetch(url, { method, headers, body: jsonBody });

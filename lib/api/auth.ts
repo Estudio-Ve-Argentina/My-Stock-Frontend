@@ -4,15 +4,15 @@ import { apiRequest } from "./client";
 import { isMockEnabled, mockLogin, mockSignup } from "./mock";
 
 export interface LoginInput {
-  username: string;
+  email: string;
   password: string;
 }
 
 export interface SignupInput {
-  username: string;
+  email: string;
   password: string;
   name: string;
-  lastname: string;
+  lastname?: string;
 }
 
 export function login(input: LoginInput): Promise<AuthResponse> {
@@ -59,6 +59,28 @@ export function logout(refreshToken: string): Promise<void> {
 
 export function fetchMe(): Promise<UserMeResponse> {
   return apiRequest<UserMeResponse>("/auth/me");
+}
+
+export function forgotPassword(email: string): Promise<void> {
+  return apiRequest<void>(`/auth/forgot-password?email=${encodeURIComponent(email)}`, {
+    method: "POST",
+    auth: false,
+  });
+}
+
+export function resetPassword(token: string, newPassword: string): Promise<void> {
+  return apiRequest<void>("/auth/reset-password", {
+    method: "POST",
+    body: { token, newPassword },
+    auth: false,
+  });
+}
+
+export function resendVerification(email: string): Promise<void> {
+  return apiRequest<void>(`/auth/resend-verification?email=${encodeURIComponent(email)}`, {
+    method: "POST",
+    auth: false,
+  });
 }
 
 export function googleLoginUrl(): string {

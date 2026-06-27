@@ -45,7 +45,7 @@ export function DashboardView() {
         <div className="relative">
           <p className="text-sm font-medium text-neon">{t(ui.panel.welcome)}</p>
           <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight md:text-4xl">
-            <span className="mark-underline text-dark-foreground">{user?.username}</span>
+            <span className="mark-underline text-dark-foreground">{user?.name || user?.username}</span>
           </h1>
           <div className="mt-5 flex flex-wrap gap-3">
             <LinkButton href="/cargar" variant="primary" size="sm">
