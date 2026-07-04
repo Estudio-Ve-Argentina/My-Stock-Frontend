@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { MarketingContact } from "@/components/marketing/MarketingContact";
+
+export const metadata: Metadata = {
+  title: "Contacto",
+  description:
+    "Contactá al equipo de My-Stock. Estamos para ayudarte con tu inventario.",
+};
 
 export default function ContactoPublicPage() {
   return (
