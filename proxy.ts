@@ -23,5 +23,12 @@ export const config = {
     "/historial/:path*",
     "/mi-plan/:path*",
     "/cuenta/:path*",
+    "/categorias/:path*",
+    "/proveedores/:path*",
+    "/sucursales/:path*",
+    "/favoritos/:path*",
+    "/metricas/:path*",
+    "/informes/:path*",
+    "/onboarding/:path*",
   ],
 };

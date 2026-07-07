@@ -22,6 +22,8 @@ function toMovement(raw: StockMovementResponse): Movement {
     type: mapMovementType(raw.movementType, raw.quantity),
     quantity: Math.abs(raw.quantity),
     at: raw.createdAt,
+    reason: raw.reason ?? null,
+    branchName: raw.branchName ?? null,
   };
 }
 

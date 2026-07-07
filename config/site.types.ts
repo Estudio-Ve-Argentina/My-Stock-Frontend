@@ -44,6 +44,14 @@ export interface UserDetailResponse {
   autoRenew: boolean;
 }
 
+export interface BranchStock {
+  branchId: number;
+  branchName: string;
+  stock: number;
+  minStock: number;
+  lowStock: boolean;
+}
+
 export interface ProductResponse {
   id: number;
   name: string;
@@ -51,12 +59,22 @@ export interface ProductResponse {
   createdAt: string;
   stock: number;
   active: boolean;
+  pinned: boolean;
   minStock: number;
   lowStock: boolean;
   categoryId: number | null;
   categoryName: string | null;
+  supplierId: number | null;
+  supplierName: string | null;
+  branchStocks: BranchStock[];
   userId: number;
   user: string;
+}
+
+export interface StockDistribution {
+  branchId: number;
+  stock: number;
+  minStock?: number;
 }
 
 export interface ProductRequest {
@@ -65,7 +83,9 @@ export interface ProductRequest {
   stock: number;
   userId: number;
   categoryId?: number | null;
+  supplierId?: number | null;
   minStock?: number;
+  distributions?: StockDistribution[];
 }
 
 export interface CategoryResponse {
@@ -75,6 +95,32 @@ export interface CategoryResponse {
 
 export interface CategoryRequest {
   name: string;
+}
+
+export interface SupplierResponse {
+  id: number;
+  name: string;
+  contact: string;
+  email: string | null;
+  address: string | null;
+}
+
+export interface SupplierRequest {
+  name: string;
+  contact: string;
+  email?: string;
+  address?: string;
+}
+
+export interface BranchResponse {
+  id: number;
+  name: string;
+  address: string | null;
+}
+
+export interface BranchRequest {
+  name: string;
+  address?: string;
 }
 
 export interface Page<T> {
@@ -93,12 +139,16 @@ export type BackendMovementType =
 
 export type MovementType = "created" | "increased" | "decreased" | "modified" | "deleted";
 
+export type StockReason = "VENTA" | "MERMA" | "DEVOLUCION" | "AJUSTE_CONTEO";
+
 export interface Movement {
   id: number;
   productName: string;
   type: MovementType;
   quantity: number;
   at: string;
+  reason: StockReason | null;
+  branchName: string | null;
 }
 
 export interface StockMovementResponse {
@@ -107,6 +157,8 @@ export interface StockMovementResponse {
   productId: number | null;
   quantity: number;
   movementType: BackendMovementType;
+  reason: StockReason | null;
+  branchName: string | null;
   createdAt: string;
 }
 

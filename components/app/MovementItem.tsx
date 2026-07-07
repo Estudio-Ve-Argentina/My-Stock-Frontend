@@ -1,6 +1,6 @@
 "use client";
 
-import type { Localized, Movement, MovementType } from "@/config/site.types";
+import type { Localized, Movement, MovementType, StockReason } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -13,6 +13,13 @@ const typeMeta: Record<
   decreased: { label: ui.history.decreased, chip: "bg-accent-soft text-accent-foreground", sign: "−" },
   modified: { label: ui.history.modified, chip: "bg-brown-soft text-brown", sign: "" },
   deleted: { label: ui.history.deleted, chip: "bg-danger/10 text-danger", sign: "" },
+};
+
+const reasonLabels: Record<StockReason, Localized> = {
+  VENTA: ui.products.reasonSale,
+  MERMA: ui.products.reasonWaste,
+  DEVOLUCION: ui.products.reasonReturn,
+  AJUSTE_CONTEO: ui.products.reasonCount,
 };
 
 function timeLabel(iso: string, locale: string): string {
@@ -30,13 +37,25 @@ export function MovementItem({ movement }: { movement: Movement }) {
 
   return (
     <li className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-5 py-3.5 shadow-[0_4px_16px_-4px_rgba(22,163,74,0.08)] transition-shadow hover:shadow-[0_8px_24px_-4px_rgba(22,163,74,0.14)]">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${meta.chip}`}>
+      <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+        <span className={`shrink-0 self-start rounded-full px-3 py-1 text-sm font-semibold sm:self-auto ${meta.chip}`}>
           {t(meta.label)}
         </span>
         <span className="truncate font-heading text-base font-semibold text-foreground">
           {movement.productName}
         </span>
+        <div className="flex gap-1.5">
+          {movement.reason && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-subtle">
+              {t(reasonLabels[movement.reason])}
+            </span>
+          )}
+          {movement.branchName && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-subtle">
+              {movement.branchName}
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-3">
         {meta.sign && movement.quantity > 0 && (
