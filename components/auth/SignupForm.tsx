@@ -8,6 +8,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { signup } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
+import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
@@ -55,14 +56,10 @@ export function SignupForm() {
       signIn(response.jwtToken, response.refreshToken, response.username);
       router.replace("/panel");
     } catch (caught) {
-      if (caught instanceof ApiError) {
-        if (Object.keys(caught.fieldErrors).length > 0) {
-          setFieldErrors(caught.fieldErrors);
-        }
-        setError(caught.message || t(ui.common.genericError));
-      } else {
-        setError(t(ui.common.genericError));
+      if (caught instanceof ApiError && Object.keys(caught.fieldErrors).length > 0) {
+        setFieldErrors(caught.fieldErrors);
       }
+      setError(resolveErrorMessage(caught, t));
       setPending(false);
     }
   }

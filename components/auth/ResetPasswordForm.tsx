@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { resetPassword } from "@/lib/api/auth";
-import { ApiError } from "@/lib/api/client";
+import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
@@ -30,8 +30,7 @@ export function ResetPasswordForm() {
       await resetPassword(token, password);
       setDone(true);
     } catch (caught) {
-      const backendMsg = caught instanceof ApiError ? caught.message : "";
-      setError(backendMsg || t(ui.common.genericError));
+      setError(resolveErrorMessage(caught, t));
     } finally {
       setPending(false);
     }

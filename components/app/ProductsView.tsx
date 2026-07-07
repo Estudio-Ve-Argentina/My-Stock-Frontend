@@ -1,18 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ProductResponse } from "@/config/site.types";
+import type { ProductResponse, StockReason } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { useSuppliers } from "@/hooks/useSuppliers";
+import { useBranches } from "@/hooks/useBranches";
+import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useToast } from "@/components/ui/Toast";
 import { PlanLimitBanner } from "./PlanLimitBanner";
 import { ChevronDownIcon, PlusIcon } from "./icons";
+
+const STOCK_REASONS: { value: StockReason; label: { es: string; en: string } }[] = [
+  { value: "VENTA", label: ui.products.reasonSale },
+  { value: "MERMA", label: ui.products.reasonWaste },
+  { value: "DEVOLUCION", label: ui.products.reasonReturn },
+  { value: "AJUSTE_CONTEO", label: ui.products.reasonCount },
+];
 
 function stockBadge(product: ProductResponse): string {
   if (product.stock === 0) return "bg-danger/10 text-danger";
@@ -30,24 +41,36 @@ type ModalState =
       name: string;
       description: string;
       categoryId: number | null;
+      supplierId: number | null;
       minStock: string;
       showAdvanced: boolean;
     }
-  | { kind: "stock"; product: ProductResponse; delta: number; quantity: string };
+  | {
+      kind: "stock";
+      product: ProductResponse;
+      delta: number;
+      quantity: string;
+      reason: StockReason | "";
+      branchId: number | null;
+    };
 
 function RowMenu({
   product,
   onDetail,
   onEdit,
+  onPin,
   onDelete,
 }: {
   product: ProductResponse;
   onDetail: () => void;
   onEdit: () => void;
+  onPin: () => void;
   onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -61,11 +84,23 @@ function RowMenu({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
+  const handleToggle = useCallback(() => {
+    setOpen((prev) => {
+      if (!prev && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const dropdownHeight = 220;
+        setDropUp(rect.bottom + dropdownHeight > window.innerHeight);
+      }
+      return !prev;
+    });
+  }, []);
+
   return (
     <div ref={ref} className="relative">
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleToggle}
         className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-subtle transition-colors hover:bg-muted hover:text-foreground"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -75,7 +110,7 @@ function RowMenu({
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-20 mt-1 min-w-40 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-[0_12px_36px_-8px_rgba(22,163,74,0.18)]">
+        <div className={`absolute right-0 z-20 min-w-40 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-[0_12px_36px_-8px_rgba(22,163,74,0.18)] ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}>
           <button
             type="button"
             onClick={() => { setOpen(false); onDetail(); }}
@@ -99,6 +134,17 @@ function RowMenu({
               {t(ui.products.edit)}
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => { setOpen(false); onPin(); }}
+            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-brand-soft/15"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={product.pinned ? "text-brand" : "text-subtle"}>
+              <path d="M12 17v5M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7" />
+              <path d="M5 11h14l-1.5 6H6.5L5 11Z" />
+            </svg>
+            {product.pinned ? t(ui.products.unpin) : t(ui.products.pin)}
+          </button>
           <div className="mx-3 my-1 h-px bg-border/60" />
           <button
             type="button"
@@ -119,13 +165,18 @@ function RowMenu({
 export function ProductsView() {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { products, loading, error, reload, changeStock, remove, update } =
+  const { products, loading, error, reload, changeStock, remove, update, togglePin } =
     useProducts(user?.username);
   const { categories } = useCategories();
+  const { suppliers } = useSuppliers();
+  const { branches } = useBranches();
+  const hasMultipleBranches = branches.length > 1;
 
   const [query, setQuery] = useState("");
   const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
   const [modal, setModal] = useState<ModalState>({ kind: "none" });
+  const [modalError, setModalError] = useState<string | null>(null);
+  const { show } = useToast();
 
   const activeCount = products.filter((p) => p.active).length;
   const atLimit =
@@ -150,28 +201,49 @@ export function ProductsView() {
 
   const confirmDelete = useCallback(async () => {
     if (modal.kind !== "delete") return;
-    await remove(modal.product);
-    setModal({ kind: "none" });
-  }, [modal, remove]);
+    setModalError(null);
+    try {
+      await remove(modal.product);
+      setModal({ kind: "none" });
+    } catch (caught) {
+      setModalError(resolveErrorMessage(caught, t));
+    }
+  }, [modal, remove, t]);
 
   const confirmEdit = useCallback(async () => {
     if (modal.kind !== "edit" || !modal.product.id) return;
-    await update(modal.product, {
-      name: modal.name,
-      description: modal.description,
-      categoryId: modal.categoryId,
-      minStock: Math.max(0, Number(modal.minStock) || 0),
-    });
-    setModal({ kind: "none" });
-  }, [modal, update]);
+    setModalError(null);
+    try {
+      await update(modal.product, {
+        name: modal.name,
+        description: modal.description,
+        categoryId: modal.categoryId,
+        supplierId: modal.supplierId,
+        minStock: Math.max(0, Number(modal.minStock) || 0),
+      });
+      setModal({ kind: "none" });
+    } catch (caught) {
+      setModalError(resolveErrorMessage(caught, t));
+    }
+  }, [modal, update, t]);
 
   const confirmStock = useCallback(async () => {
     if (modal.kind !== "stock") return;
     const qty = parseInt(modal.quantity, 10);
     if (isNaN(qty) || qty <= 0) return;
-    await changeStock(modal.product, modal.delta * qty);
-    setModal({ kind: "none" });
-  }, [modal, changeStock]);
+    setModalError(null);
+    try {
+      await changeStock(
+        modal.product,
+        modal.delta * qty,
+        modal.reason || null,
+        modal.branchId,
+      );
+      setModal({ kind: "none" });
+    } catch (caught) {
+      setModalError(resolveErrorMessage(caught, t));
+    }
+  }, [modal, changeStock, t]);
 
   const stepStock = useCallback(
     (direction: 1 | -1) => {
@@ -184,7 +256,18 @@ export function ProductsView() {
     [modal],
   );
 
-  const closeModal = useCallback(() => setModal({ kind: "none" }), []);
+  const closeModal = useCallback(() => {
+    setModal({ kind: "none" });
+    setModalError(null);
+  }, []);
+
+  const handleTogglePin = useCallback(async (product: ProductResponse) => {
+    try {
+      await togglePin(product);
+    } catch (caught) {
+      show(resolveErrorMessage(caught, t));
+    }
+  }, [togglePin, t, show]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -287,16 +370,29 @@ export function ProductsView() {
                     key={product.id ?? product.name}
                     className={`border-b border-border/50 transition-colors hover:bg-brand-soft/10 ${
                       index % 2 === 1 ? "bg-muted/15" : ""
-                    } ${!product.active ? "opacity-50" : ""} ${
-                      product.lowStock && product.active
-                        ? "border-l-[3px] border-l-accent"
-                        : ""
-                    }`}
+                    } ${!product.active ? "opacity-50" : ""}`}
                   >
                     <td className="border-r border-border/50 px-4 py-3 md:px-5">
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="break-words font-heading text-base font-semibold leading-snug text-foreground md:text-lg">
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <div className="flex min-w-0 items-center gap-2">
+                          {product.lowStock && product.active && (
+                            <span
+                              title={t(ui.products.lowStock)}
+                              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-bold text-accent-foreground"
+                            >
+                              !
+                            </span>
+                          )}
+                          {product.pinned && (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand">
+                              <path d="M12 17v5M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7" />
+                              <path d="M5 11h14l-1.5 6H6.5L5 11Z" />
+                            </svg>
+                          )}
+                          <span
+                            title={product.name}
+                            className="line-clamp-2 break-words font-heading text-base font-semibold leading-snug text-foreground md:text-lg"
+                          >
                             {product.name}
                           </span>
                           {!product.active && (
@@ -304,14 +400,9 @@ export function ProductsView() {
                               {t(ui.products.frozen)}
                             </span>
                           )}
-                          {product.lowStock && product.active && (
-                            <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent-foreground">
-                              {t(ui.products.lowStock)}
-                            </span>
-                          )}
                         </div>
                         {product.categoryName && (
-                          <span className="text-xs font-medium text-subtle">
+                          <span className="truncate text-xs font-medium text-subtle">
                             {product.categoryName}
                           </span>
                         )}
@@ -328,7 +419,7 @@ export function ProductsView() {
                           <button
                             type="button"
                             onClick={() =>
-                              setModal({ kind: "stock", product, delta: -1, quantity: "1" })
+                              setModal({ kind: "stock", product, delta: -1, quantity: "1", reason: "", branchId: null })
                             }
                             disabled={product.stock <= 0}
                             className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-muted text-sm font-medium text-foreground transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-40 md:h-9 md:w-9 md:text-base"
@@ -343,7 +434,7 @@ export function ProductsView() {
                           <button
                             type="button"
                             onClick={() =>
-                              setModal({ kind: "stock", product, delta: 1, quantity: "1" })
+                              setModal({ kind: "stock", product, delta: 1, quantity: "1", reason: "", branchId: null })
                             }
                             className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-brand text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-dark md:h-9 md:w-9 md:text-base"
                           >
@@ -368,10 +459,12 @@ export function ProductsView() {
                               name: product.name,
                               description: product.description,
                               categoryId: product.categoryId,
+                              supplierId: product.supplierId,
                               minStock: String(product.minStock ?? 0),
                               showAdvanced: false,
                             })
                           }
+                          onPin={() => handleTogglePin(product)}
                           onDelete={() => setModal({ kind: "delete", product })}
                         />
                       </div>
@@ -420,6 +513,16 @@ export function ProductsView() {
                 </p>
               </div>
             )}
+            {modal.product.supplierName && (
+              <div>
+                <span className="text-xs font-medium uppercase tracking-wide text-subtle">
+                  {t(ui.products.supplierLabel)}
+                </span>
+                <p className="mt-0.5 text-base text-foreground">
+                  {modal.product.supplierName}
+                </p>
+              </div>
+            )}
             <div className="flex gap-6">
               <div>
                 <span className="text-xs font-medium uppercase tracking-wide text-subtle">
@@ -440,6 +543,35 @@ export function ProductsView() {
                 </div>
               )}
             </div>
+            {modal.product.branchStocks?.length > 1 && (
+              <div>
+                <span className="text-xs font-medium uppercase tracking-wide text-subtle">
+                  {t(ui.products.branchStocks)}
+                </span>
+                <div className="mt-1.5 flex flex-col gap-1">
+                  {modal.product.branchStocks.map((bs) => (
+                    <div
+                      key={bs.branchId}
+                      className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2"
+                    >
+                      <span className="text-sm font-medium text-foreground">
+                        {bs.branchName}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-heading text-sm font-bold tabular-nums text-foreground">
+                          {bs.stock}
+                        </span>
+                        {bs.lowStock && (
+                          <span className="rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+                            {t(ui.products.lowStock)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {modal.product.lowStock && (
               <p className="rounded-lg bg-accent-soft/60 px-3 py-2 text-sm font-semibold text-accent-foreground">
                 {t(ui.products.lowStock)}
@@ -453,13 +585,24 @@ export function ProductsView() {
       <ConfirmModal
         open={modal.kind === "delete"}
         title={t(ui.products.deleteConfirm)}
-        description={modal.kind === "delete" ? modal.product.name : ""}
         confirmLabel={t(ui.common.delete)}
         cancelLabel={t(ui.common.cancel)}
         variant="danger"
         onConfirm={confirmDelete}
         onCancel={closeModal}
-      />
+      >
+        {modal.kind === "delete" && (
+          <div className="flex flex-col gap-2">
+            <p className="font-heading text-base font-semibold text-foreground">
+              {modal.product.name}
+            </p>
+            <p className="text-sm text-subtle">
+              {t(ui.products.deleteWarning)}
+            </p>
+            {modalError && <p className="text-sm text-danger">{modalError}</p>}
+          </div>
+        )}
+      </ConfirmModal>
 
       {/* Edit modal */}
       <ConfirmModal
@@ -533,6 +676,33 @@ export function ProductsView() {
                   </select>
                 </div>
 
+                {suppliers.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-sm font-medium text-foreground">
+                      {t(ui.products.supplierLabel)}
+                    </span>
+                    <select
+                      value={modal.supplierId ?? ""}
+                      onChange={(e) =>
+                        setModal({
+                          ...modal,
+                          supplierId: e.target.value
+                            ? Number(e.target.value)
+                            : null,
+                        })
+                      }
+                      className="select-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-base font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
+                    >
+                      <option value="">{t(ui.products.noSupplier)}</option>
+                      {suppliers.map((sup) => (
+                        <option key={sup.id} value={sup.id}>
+                          {sup.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <TextField
                   label={t(ui.products.minStockLabel)}
                   name="edit-minStock"
@@ -549,6 +719,7 @@ export function ProductsView() {
                 />
               </div>
             )}
+            {modalError && <p className="text-sm text-danger">{modalError}</p>}
           </div>
         )}
       </ConfirmModal>
@@ -556,48 +727,105 @@ export function ProductsView() {
       {/* Stock adjust modal */}
       <ConfirmModal
         open={modal.kind === "stock"}
-        title={t(ui.products.stockTitle)}
-        description={modal.kind === "stock" ? modal.product.name : ""}
-        confirmLabel={
+        title={
           modal.kind === "stock" && modal.delta > 0
-            ? t(ui.products.stockAdd)
-            : t(ui.products.stockRemove)
+            ? t(ui.products.stockAddTitle)
+            : t(ui.products.stockRemoveTitle)
         }
+        description={modal.kind === "stock" ? modal.product.name : ""}
+        confirmLabel={t(ui.products.stockConfirm)}
         cancelLabel={t(ui.common.cancel)}
         onConfirm={confirmStock}
         onCancel={closeModal}
       >
         {modal.kind === "stock" && (
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-medium text-subtle">
-              {t(ui.products.stockQuantity)}
-            </span>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => stepStock(-1)}
-                disabled={parseInt(modal.quantity, 10) <= 1}
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-muted text-lg font-bold text-foreground transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min="1"
-                value={modal.quantity}
-                onChange={(e) =>
-                  setModal({ ...modal, quantity: e.target.value })
-                }
-                className="w-20 rounded-xl border border-border bg-surface px-2 py-2 text-center font-heading text-2xl font-bold tabular-nums text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
-              />
-              <button
-                type="button"
-                onClick={() => stepStock(1)}
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-brand text-lg font-bold text-brand-foreground transition-colors hover:bg-brand-dark"
-              >
-                +
-              </button>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs font-medium text-subtle">
+                {t(ui.products.stockQuantity)}
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => stepStock(modal.delta > 0 ? -1 : 1)}
+                  disabled={modal.delta > 0 && parseInt(modal.quantity, 10) <= 1}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-muted text-lg font-bold text-foreground transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  −
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={modal.delta * (parseInt(modal.quantity, 10) || 1)}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setModal({ ...modal, quantity: String(Math.max(1, Math.abs(val))) });
+                  }}
+                  className="w-20 rounded-xl border border-border bg-surface py-2 text-center font-heading text-xl font-bold tabular-nums text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
+                />
+                <button
+                  type="button"
+                  onClick={() => stepStock(modal.delta > 0 ? 1 : -1)}
+                  disabled={modal.delta < 0 && parseInt(modal.quantity, 10) <= 1}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-brand text-lg font-bold text-brand-foreground transition-colors hover:bg-brand-dark"
+                >
+                  +
+                </button>
+              </div>
             </div>
+
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-subtle">
+                  {t(ui.products.reasonLabel)}
+                </span>
+                <select
+                  value={modal.reason}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      reason: (e.target.value as StockReason) || "",
+                    })
+                  }
+                  className="select-field w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none focus:border-brand"
+                >
+                  <option value="">{t(ui.products.noReason)}</option>
+                  {STOCK_REASONS.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {t(r.label)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {hasMultipleBranches && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-subtle">
+                    {t(ui.products.branchLabel)}
+                  </span>
+                  <select
+                    value={modal.branchId ?? ""}
+                    onChange={(e) =>
+                      setModal({
+                        ...modal,
+                        branchId: e.target.value
+                          ? Number(e.target.value)
+                          : null,
+                      })
+                    }
+                    className="select-field w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none focus:border-brand"
+                  >
+                    <option value="">—</option>
+                    {modal.product.branchStocks?.map((bs) => (
+                      <option key={bs.branchId} value={bs.branchId}>
+                        {bs.branchName} ({bs.stock})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            {modalError && <p className="text-sm text-danger">{modalError}</p>}
           </div>
         )}
       </ConfirmModal>

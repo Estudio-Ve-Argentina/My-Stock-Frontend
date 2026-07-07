@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
 import { updateProfile, changePassword } from "@/lib/api/user";
 import { resendVerification } from "@/lib/api/auth";
-import { ApiError } from "@/lib/api/client";
+import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
@@ -44,8 +44,8 @@ function ProfileSection() {
       refreshUser();
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setError(t(ui.common.genericError));
+    } catch (caught) {
+      setError(resolveErrorMessage(caught, t));
     } finally {
       setPending(false);
     }
@@ -113,8 +113,7 @@ function ChangePasswordSection() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (caught) {
-      const backendMsg = caught instanceof ApiError ? caught.message : "";
-      setError(backendMsg || t(ui.common.genericError));
+      setError(resolveErrorMessage(caught, t));
     } finally {
       setPending(false);
     }
@@ -176,7 +175,7 @@ function EmailVerificationSection() {
       await resendVerification(user.username);
       show(t(ui.account.verificationSent));
     } catch {
-      /* silently fail */
+      show(t(ui.common.genericError));
     } finally {
       setSending(false);
     }

@@ -25,7 +25,7 @@ export function EmailVerificationBanner() {
       setHidden(true);
       show(t(ui.account.verificationSent));
     } catch {
-      /* silently fail */
+      show(t(ui.common.genericError));
     } finally {
       setSending(false);
     }

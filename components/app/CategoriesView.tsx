@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
+import { resolveErrorMessage } from "@/lib/error-utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
@@ -26,6 +27,8 @@ export function CategoriesView() {
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [showCreateInput, setShowCreateInput] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>({ kind: "none" });
 
   const productCountByCategory = useMemo(() => {
@@ -42,30 +45,44 @@ export function CategoriesView() {
     const trimmed = newName.trim();
     if (!trimmed || creating) return;
     setCreating(true);
+    setFormError(null);
     try {
       await add({ name: trimmed });
       setNewName("");
       setShowCreateInput(false);
-    } catch {
-      // error handled in hook
+    } catch (caught) {
+      setFormError(resolveErrorMessage(caught, t));
     } finally {
       setCreating(false);
     }
-  }, [newName, creating, add]);
+  }, [newName, creating, add, t]);
 
   const confirmDelete = useCallback(async () => {
     if (modal.kind !== "delete") return;
-    await remove(modal.id);
-    setModal({ kind: "none" });
-  }, [modal, remove]);
+    setModalError(null);
+    try {
+      await remove(modal.id);
+      setModal({ kind: "none" });
+    } catch (caught) {
+      setModalError(resolveErrorMessage(caught, t));
+    }
+  }, [modal, remove, t]);
 
   const confirmRename = useCallback(async () => {
     if (modal.kind !== "rename" || !modal.name.trim()) return;
-    await rename(modal.id, { name: modal.name.trim() });
-    setModal({ kind: "none" });
-  }, [modal, rename]);
+    setModalError(null);
+    try {
+      await rename(modal.id, { name: modal.name.trim() });
+      setModal({ kind: "none" });
+    } catch (caught) {
+      setModalError(resolveErrorMessage(caught, t));
+    }
+  }, [modal, rename, t]);
 
-  const closeModal = useCallback(() => setModal({ kind: "none" }), []);
+  const closeModal = useCallback(() => {
+    setModal({ kind: "none" });
+    setModalError(null);
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,39 +95,43 @@ export function CategoriesView() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {showCreateInput ? (
-          <div className="flex w-full gap-2">
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreate();
-                if (e.key === "Escape") {
+          <>
+            <div className="flex w-full gap-2">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreate();
+                  if (e.key === "Escape") {
+                    setShowCreateInput(false);
+                    setNewName("");
+                  }
+                }}
+                placeholder={t(ui.categories.namePlaceholder)}
+                autoFocus
+                className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10"
+              />
+              <Button
+                variant="primary"
+                disabled={!newName.trim() || creating}
+                onClick={handleCreate}
+              >
+                {creating ? <Spinner /> : t(ui.common.save)}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
                   setShowCreateInput(false);
                   setNewName("");
-                }
-              }}
-              placeholder={t(ui.categories.namePlaceholder)}
-              autoFocus
-              className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10"
-            />
-            <Button
-              variant="primary"
-              disabled={!newName.trim() || creating}
-              onClick={handleCreate}
-            >
-              {creating ? <Spinner /> : t(ui.common.save)}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setShowCreateInput(false);
-                setNewName("");
-              }}
-            >
-              {t(ui.common.cancel)}
-            </Button>
-          </div>
+                  setFormError(null);
+                }}
+              >
+                {t(ui.common.cancel)}
+              </Button>
+            </div>
+            {formError && <p className="text-sm text-danger">{formError}</p>}
+          </>
         ) : (
           <Button
             variant="primary"
@@ -231,16 +252,19 @@ export function CategoriesView() {
         onCancel={closeModal}
       >
         {modal.kind === "rename" && (
-          <input
-            type="text"
-            value={modal.name}
-            onChange={(e) => setModal({ ...modal, name: e.target.value })}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") confirmRename();
-            }}
-            autoFocus
-            className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
-          />
+          <>
+            <input
+              type="text"
+              value={modal.name}
+              onChange={(e) => setModal({ ...modal, name: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") confirmRename();
+              }}
+              autoFocus
+              className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
+            />
+            {modalError && <p className="text-sm text-danger">{modalError}</p>}
+          </>
         )}
       </ConfirmModal>
 
@@ -254,7 +278,9 @@ export function CategoriesView() {
         variant="danger"
         onConfirm={confirmDelete}
         onCancel={closeModal}
-      />
+      >
+        {modalError && <p className="text-sm text-danger">{modalError}</p>}
+      </ConfirmModal>
     </div>
   );
 }

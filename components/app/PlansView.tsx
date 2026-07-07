@@ -7,6 +7,7 @@ import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { changePlan, cancelPlanRenewal } from "@/lib/api/user";
+import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/Button";
 import { PlansComparisonTable } from "@/components/ui/PlansComparisonTable";
 
@@ -23,6 +24,7 @@ export function PlansView() {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
 
   const currentPlanId = configIdFromBackend(user?.planName ?? "FREE");
   const currentPlan = appConfig.plans.find((p) => p.id === currentPlanId) ?? appConfig.plans[0];
@@ -36,6 +38,7 @@ export function PlansView() {
     }
     setLoading(true);
     setFeedback(null);
+    setPlanError(null);
     try {
       await changePlan(user.userId, backendIdFromConfig(targetPlanId));
       refreshUser();
@@ -46,8 +49,8 @@ export function PlansView() {
       } else {
         setFeedback(t(ui.plans.planChanged));
       }
-    } catch {
-      setFeedback(t(ui.common.genericError));
+    } catch (caught) {
+      setPlanError(resolveErrorMessage(caught, t));
     } finally {
       setLoading(false);
     }
@@ -57,12 +60,13 @@ export function PlansView() {
     if (!user?.userId) return;
     setLoading(true);
     setFeedback(null);
+    setPlanError(null);
     try {
       await cancelPlanRenewal(user.userId);
       refreshUser();
       setFeedback(t(ui.plans.cancelSuccess));
-    } catch {
-      setFeedback(t(ui.common.genericError));
+    } catch (caught) {
+      setPlanError(resolveErrorMessage(caught, t));
     } finally {
       setLoading(false);
     }
@@ -177,6 +181,9 @@ export function PlansView() {
 
           {feedback && (
             <p className="text-sm font-medium text-brand">{feedback}</p>
+          )}
+          {planError && (
+            <p className="text-sm font-medium text-danger">{planError}</p>
           )}
         </div>
       </section>
