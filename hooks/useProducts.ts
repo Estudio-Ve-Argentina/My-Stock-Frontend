@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { ProductRequest, ProductResponse } from "@/config/site.types";
+import type { ProductRequest, ProductResponse, StockReason } from "@/config/site.types";
 import type { UpdateProductInput } from "@/lib/api/products";
 import {
   createProduct,
   deleteProduct,
   listProductsByUsername,
+  pinProduct,
   updateProduct,
   updateStock,
 } from "@/lib/api/products";
@@ -50,9 +51,18 @@ export function useProducts(username: string | undefined) {
   }, []);
 
   const changeStock = useCallback(
-    async (product: ProductResponse, delta: number) => {
+    async (
+      product: ProductResponse,
+      delta: number,
+      reason?: StockReason | null,
+      branchId?: number | null,
+    ) => {
       if (product.stock + delta < 0) return;
-      const updated = await updateStock(product.id, delta);
+      const updated = await updateStock(product.id, {
+        quantity: delta,
+        reason,
+        branchId,
+      });
       setState((current) => ({
         ...current,
         products: current.products.map((item) =>
@@ -76,6 +86,16 @@ export function useProducts(username: string | undefined) {
     [],
   );
 
+  const togglePin = useCallback(async (product: ProductResponse) => {
+    const updated = await pinProduct(product.id);
+    setState((current) => ({
+      ...current,
+      products: current.products.map((item) =>
+        item.id === product.id ? updated : item,
+      ),
+    }));
+  }, []);
+
   const remove = useCallback(async (product: ProductResponse) => {
     await deleteProduct(product.id);
     setState((current) => ({
@@ -84,5 +104,5 @@ export function useProducts(username: string | undefined) {
     }));
   }, []);
 
-  return { ...state, reload: load, add, changeStock, update, remove };
+  return { ...state, reload: load, add, changeStock, update, togglePin, remove };
 }

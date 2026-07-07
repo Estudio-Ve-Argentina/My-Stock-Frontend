@@ -36,7 +36,14 @@ export interface UpdateProductInput {
   name: string;
   description: string;
   categoryId?: number | null;
+  supplierId?: number | null;
   minStock?: number;
+}
+
+export interface StockUpdateInput {
+  quantity: number;
+  reason?: string | null;
+  branchId?: number | null;
 }
 
 export function updateProduct(
@@ -54,14 +61,23 @@ export function updateProduct(
 
 export function updateStock(
   id: number,
-  quantity: number,
+  input: StockUpdateInput,
 ): Promise<ProductResponse> {
   if (isMockEnabled()) {
-    return mockUpdateStock(id, quantity);
+    return mockUpdateStock(id, input.quantity);
   }
+  const body: Record<string, unknown> = { quantity: input.quantity };
+  if (input.reason) body.reason = input.reason;
+  if (input.branchId) body.branchId = input.branchId;
   return apiRequest<ProductResponse>(`/api/products/${id}/stock`, {
     method: "PATCH",
-    body: { quantity },
+    body,
+  });
+}
+
+export function pinProduct(id: number): Promise<ProductResponse> {
+  return apiRequest<ProductResponse>(`/api/products/${id}/pin`, {
+    method: "PATCH",
   });
 }
 

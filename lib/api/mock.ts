@@ -80,8 +80,25 @@ function writeStore(userId: number, products: ProductResponse[]): void {
   window.localStorage.setItem(storeKey(userId), JSON.stringify(products));
 }
 
+function seedProducts(userId: number): ProductResponse[] {
+  const base = { userId, active: true, user: "", categoryId: null, categoryName: null, supplierId: null, supplierName: null, branchStocks: [] };
+  const seed: ProductResponse[] = [
+    { ...base, id: 1, name: "Café molido 500g", description: "Café tostado premium molido fino", stock: 24, createdAt: hoursAgo(48), minStock: 5, lowStock: false, pinned: true },
+    { ...base, id: 2, name: "Yerba 1kg", description: "Yerba mate tradicional con palo", stock: 8, createdAt: hoursAgo(72), minStock: 10, lowStock: true, pinned: false },
+    { ...base, id: 3, name: "Azúcar 1kg", description: "Azúcar blanca refinada", stock: 15, createdAt: hoursAgo(5), minStock: 0, lowStock: false, pinned: false },
+    { ...base, id: 4, name: "Galletitas", description: "Galletitas de agua clásicas x3", stock: 2, createdAt: hoursAgo(96), minStock: 5, lowStock: true, pinned: false },
+    { ...base, id: 5, name: "Harina 000 1kg", description: "Harina de trigo triple cero", stock: 30, createdAt: hoursAgo(120), minStock: 0, lowStock: false, pinned: false },
+  ];
+  writeStore(userId, seed);
+  return seed;
+}
+
 export function mockListProducts(username: string): Promise<ProductResponse[]> {
-  return Promise.resolve(readStore(stableId(username)));
+  const userId = stableId(username);
+  if (typeof window !== "undefined" && window.localStorage.getItem(storeKey(userId)) === null) {
+    return Promise.resolve(seedProducts(userId));
+  }
+  return Promise.resolve(readStore(userId));
 }
 
 export function mockCreateProduct(
