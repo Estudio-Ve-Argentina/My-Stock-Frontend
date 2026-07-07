@@ -12,6 +12,7 @@ import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
+import { BranchPickerModal } from "./BranchPickerModal";
 import { ChevronDownIcon, PlusIcon } from "./icons";
 
 interface ProductFormProps {
@@ -23,7 +24,7 @@ interface ProductFormProps {
 export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
   const { t } = useLanguage();
   const { categories, add: addCategory } = useCategories();
-  const { suppliers } = useSuppliers();
+  const { suppliers, add: addSupplier } = useSuppliers();
   const { branches } = useBranches();
 
   const [name, setName] = useState("");
@@ -37,10 +38,16 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [creatingCategory, setCreatingCategory] = useState(false);
 
+  const [showNewSupplier, setShowNewSupplier] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState("");
+  const [newSupplierContact, setNewSupplierContact] = useState("");
+  const [creatingSupplier, setCreatingSupplier] = useState(false);
+
   const [distributeEnabled, setDistributeEnabled] = useState(false);
   const [distributions, setDistributions] = useState<
     { branchId: number; stock: string; minStock: string }[]
   >([]);
+  const [branchPickerOpen, setBranchPickerOpen] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -55,16 +62,10 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
   );
   const distributionValid =
     !distributeEnabled || distributionSum === totalStock;
+  const distributionExceeds =
+    distributeEnabled && distributionSum > totalStock;
 
-  function addDistributionRow() {
-    const usedIds = new Set(distributions.map((d) => d.branchId));
-    const available = branches.find((b) => !usedIds.has(b.id));
-    if (!available) return;
-    setDistributions([
-      ...distributions,
-      { branchId: available.id, stock: "0", minStock: "0" },
-    ]);
-  }
+  const usedBranchIds = new Set(distributions.map((d) => d.branchId));
 
   function removeDistributionRow(index: number) {
     setDistributions(distributions.filter((_, i) => i !== index));
@@ -72,8 +73,8 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
 
   function updateDistribution(
     index: number,
-    field: "branchId" | "stock" | "minStock",
-    value: string | number,
+    field: "stock" | "minStock",
+    value: string,
   ) {
     setDistributions(
       distributions.map((d, i) =>
@@ -95,6 +96,27 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
       setError(resolveErrorMessage(caught, t));
     } finally {
       setCreatingCategory(false);
+    }
+  }
+
+  async function handleCreateSupplier() {
+    const trimmedName = newSupplierName.trim();
+    const trimmedContact = newSupplierContact.trim();
+    if (!trimmedName || !trimmedContact || creatingSupplier) return;
+    setCreatingSupplier(true);
+    try {
+      const created = await addSupplier({
+        name: trimmedName,
+        contact: trimmedContact,
+      });
+      setSupplierId(created.id);
+      setNewSupplierName("");
+      setNewSupplierContact("");
+      setShowNewSupplier(false);
+    } catch (caught) {
+      setError(resolveErrorMessage(caught, t));
+    } finally {
+      setCreatingSupplier(false);
     }
   }
 
@@ -141,8 +163,6 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
     }
   }
 
-  const usedBranchIds = new Set(distributions.map((d) => d.branchId));
-
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <TextField
@@ -187,6 +207,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
 
       {showAdvanced && (
         <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-muted/30 p-4">
+          {/* Category */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-foreground">
               {t(ui.products.categoryLabel)}
@@ -244,17 +265,16 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
             )}
           </div>
 
-          {suppliers.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">
-                {t(ui.products.supplierLabel)}
-              </span>
+          {/* Supplier */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-foreground">
+              {t(ui.products.supplierLabel)}
+            </span>
+            <div className="flex gap-2">
               <select
                 value={supplierId ?? ""}
                 onChange={(e) =>
-                  setSupplierId(
-                    e.target.value ? Number(e.target.value) : null,
-                  )
+                  setSupplierId(e.target.value ? Number(e.target.value) : null)
                 }
                 className="select-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-base font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10"
               >
@@ -265,8 +285,58 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => setShowNewSupplier((v) => !v)}
+                className="flex h-[42px] w-[42px] shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface text-brand transition-colors hover:bg-brand-soft/30"
+                title={t(ui.products.newSupplier)}
+              >
+                <PlusIcon className="h-5 w-5" />
+              </button>
             </div>
-          )}
+
+            {showNewSupplier && (
+              <div className="mt-1 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSupplierName}
+                    onChange={(e) => setNewSupplierName(e.target.value)}
+                    placeholder={t(ui.suppliers.namePlaceholder)}
+                    className="w-full rounded-xl border border-border bg-surface px-4 py-2 text-base text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSupplierContact}
+                    onChange={(e) => setNewSupplierContact(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleCreateSupplier();
+                      }
+                    }}
+                    placeholder={t(ui.suppliers.contactPlaceholder)}
+                    className="w-full rounded-xl border border-border bg-surface px-4 py-2 text-base text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10"
+                  />
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    disabled={
+                      !newSupplierName.trim() ||
+                      !newSupplierContact.trim() ||
+                      creatingSupplier
+                    }
+                    onClick={handleCreateSupplier}
+                  >
+                    {creatingSupplier ? <Spinner /> : t(ui.products.newSupplier)}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <TextField
             label={t(ui.products.minStockLabel)}
@@ -278,6 +348,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
             onChange={(event) => setMinStock(event.target.value)}
           />
 
+          {/* Branch distribution */}
           {hasMultipleBranches && (
             <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-surface/50 p-4">
               <label className="flex cursor-pointer items-center gap-2.5">
@@ -286,15 +357,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                   checked={distributeEnabled}
                   onChange={(e) => {
                     setDistributeEnabled(e.target.checked);
-                    if (e.target.checked && distributions.length === 0) {
-                      setDistributions(
-                        branches.map((b) => ({
-                          branchId: b.id,
-                          stock: "0",
-                          minStock: "0",
-                        })),
-                      );
-                    }
+                    if (!e.target.checked) setDistributions([]);
                   }}
                   className="h-4 w-4 rounded border-border accent-brand"
                 />
@@ -312,31 +375,11 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                     return (
                       <div
                         key={dist.branchId}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2"
                       >
-                        <select
-                          value={dist.branchId}
-                          onChange={(e) =>
-                            updateDistribution(
-                              i,
-                              "branchId",
-                              Number(e.target.value),
-                            )
-                          }
-                          className="select-field min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none focus:border-brand"
-                        >
-                          {branches
-                            .filter(
-                              (b) =>
-                                b.id === dist.branchId ||
-                                !usedBranchIds.has(b.id),
-                            )
-                            .map((b) => (
-                              <option key={b.id} value={b.id}>
-                                {b.name}
-                              </option>
-                            ))}
-                        </select>
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                          {branch?.name}
+                        </span>
                         <input
                           type="number"
                           min={0}
@@ -347,15 +390,24 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                           placeholder={t(ui.products.stock)}
                           className="w-20 rounded-lg border border-border bg-surface px-3 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand"
                         />
-                        {distributions.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeDistributionRow(i)}
-                            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-subtle transition-colors hover:bg-danger/10 hover:text-danger"
-                          >
-                            ×
-                          </button>
-                        )}
+                        <input
+                          type="number"
+                          min={0}
+                          value={dist.minStock}
+                          onChange={(e) =>
+                            updateDistribution(i, "minStock", e.target.value)
+                          }
+                          placeholder={t(ui.products.minStockLabel)}
+                          className="w-20 rounded-lg border border-border bg-surface px-3 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand"
+                          title={t(ui.products.minStockLabel)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeDistributionRow(i)}
+                          className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-subtle transition-colors hover:bg-danger/10 hover:text-danger"
+                        >
+                          ×
+                        </button>
                       </div>
                     );
                   })}
@@ -363,24 +415,35 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                   {distributions.length < branches.length && (
                     <button
                       type="button"
-                      onClick={addDistributionRow}
+                      onClick={() => setBranchPickerOpen(true)}
                       className="flex cursor-pointer items-center gap-1.5 self-start rounded-lg px-2 py-1 text-xs font-semibold text-brand transition-colors hover:text-brand-dark"
                     >
                       <PlusIcon className="h-3.5 w-3.5" />
-                      {t(ui.products.branchLabel)}
+                      {t(ui.products.addBranch)}
                     </button>
                   )}
 
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-subtle">
-                      {distributionSum} / {totalStock}
-                    </span>
-                    {!distributionValid && (
-                      <span className="font-medium text-danger">
-                        {t(ui.products.distributionSum)}
+                  {distributions.length > 0 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span
+                        className={`font-semibold tabular-nums ${
+                          distributionValid
+                            ? "text-brand"
+                            : distributionExceeds
+                              ? "text-danger"
+                              : "text-subtle"
+                        }`}
+                      >
+                        {distributionSum} / {totalStock}
+                        {distributionValid && " ✓"}
                       </span>
-                    )}
-                  </div>
+                      {distributionExceeds && (
+                        <span className="font-medium text-danger">
+                          {t(ui.products.distributionExceeds)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -402,6 +465,19 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
           {pending ? <Spinner /> : t(ui.common.save)}
         </Button>
       </div>
+
+      <BranchPickerModal
+        open={branchPickerOpen}
+        branches={branches}
+        disabledIds={usedBranchIds}
+        onSelect={(branch) =>
+          setDistributions([
+            ...distributions,
+            { branchId: branch.id, stock: "0", minStock: "0" },
+          ])
+        }
+        onClose={() => setBranchPickerOpen(false)}
+      />
     </form>
   );
 }

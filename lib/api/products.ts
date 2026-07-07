@@ -1,4 +1,4 @@
-import type { ProductRequest, ProductResponse } from "@/config/site.types";
+import type { ProductRequest, ProductResponse, StockDistribution } from "@/config/site.types";
 import { apiRequest } from "./client";
 import {
   isMockEnabled,
@@ -38,6 +38,7 @@ export interface UpdateProductInput {
   categoryId?: number | null;
   supplierId?: number | null;
   minStock?: number;
+  distributions?: StockDistribution[];
 }
 
 export interface StockUpdateInput {

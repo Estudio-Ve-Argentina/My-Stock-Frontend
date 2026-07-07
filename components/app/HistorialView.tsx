@@ -5,6 +5,7 @@ import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useMovements } from "@/hooks/useMovements";
+import { useBranches } from "@/hooks/useBranches";
 import { Spinner } from "@/components/ui/Spinner";
 import { MovementItem } from "./MovementItem";
 import type { Movement } from "@/config/site.types";
@@ -48,20 +49,33 @@ export function HistorialView() {
   const { t, locale } = useLanguage();
   const { user } = useAuth();
   const { movements, loading } = useMovements(user?.userId);
+  const { branches } = useBranches();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [filterBranch, setFilterBranch] = useState("");
 
   const filtered = useMemo(() => {
-    if (!from && !to) return movements;
-    return movements.filter((m) => {
-      const day = dateKey(m.at);
-      if (from && day < from) return false;
-      if (to && day > to) return false;
-      return true;
-    });
-  }, [movements, from, to]);
+    let result = movements;
+
+    if (from || to) {
+      result = result.filter((m) => {
+        const day = dateKey(m.at);
+        if (from && day < from) return false;
+        if (to && day > to) return false;
+        return true;
+      });
+    }
+
+    if (filterBranch) {
+      result = result.filter((m) => m.branchName === filterBranch);
+    }
+
+    return result;
+  }, [movements, from, to, filterBranch]);
 
   const grouped = useMemo(() => groupByDate(filtered), [filtered]);
+
+  const hasFilters = from || to || filterBranch;
 
   return (
     <div className="flex flex-col gap-6">
@@ -91,10 +105,27 @@ export function HistorialView() {
             className="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-brand"
           />
         </label>
-        {(from || to) && (
+        {branches.length > 1 && (
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold text-subtle">{t(ui.products.branchLabel)}</span>
+            <select
+              value={filterBranch}
+              onChange={(e) => setFilterBranch(e.target.value)}
+              className="select-field truncate rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none focus:border-brand sm:max-w-40"
+            >
+              <option value="">{t(ui.common.all)}</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.name}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {hasFilters && (
           <button
             type="button"
-            onClick={() => { setFrom(""); setTo(""); }}
+            onClick={() => { setFrom(""); setTo(""); setFilterBranch(""); }}
             className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-subtle transition-colors hover:text-foreground"
           >
             {t(ui.common.cancel)}
