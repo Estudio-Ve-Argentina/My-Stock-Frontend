@@ -11,7 +11,7 @@ import { Carousel } from "@/components/ui/Carousel";
 import { LinkButton } from "@/components/ui/Button";
 import { StatCard } from "./StatCard";
 import { MovementItem } from "./MovementItem";
-import { BoxIcon, ClockIcon, SparkIcon, PlusIcon } from "./icons";
+import { BoxIcon, ClockIcon, SparkIcon, PlusIcon, PinIcon } from "./icons";
 
 export function DashboardView() {
   const { t } = useLanguage();
@@ -36,6 +36,7 @@ export function DashboardView() {
   }, [products, movements]);
 
   const recent = movements.slice(0, 5);
+  const favorites = useMemo(() => products.filter((p) => p.pinned && p.active), [products]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -90,6 +91,44 @@ export function DashboardView() {
               <MovementItem key={movement.id} movement={movement} />
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-heading text-xl font-bold tracking-tight text-foreground">
+            {t(ui.panel.favorites)}
+          </h2>
+          <LinkButton href="/productos" variant="ghost" size="sm">
+            {t(ui.panel.viewProducts)}
+          </LinkButton>
+        </div>
+        {favorites.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-muted/40 py-10 text-center text-sm text-subtle">
+            {t(ui.panel.favoritesEmpty)}
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {favorites.map((product) => (
+              <div
+                key={product.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-heading text-sm font-bold tabular-nums ${product.stock === 0 ? "bg-danger/10 text-danger" : product.lowStock ? "bg-accent-soft text-accent-foreground" : "bg-brand-soft text-brand-dark"}`}>
+                  {product.stock}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-heading text-sm font-semibold text-foreground">
+                    {product.name}
+                  </h3>
+                  {product.categoryName && (
+                    <p className="truncate text-xs text-subtle">{product.categoryName}</p>
+                  )}
+                </div>
+                <PinIcon className="h-4 w-4 shrink-0 text-brand" />
+              </div>
+            ))}
+          </div>
         )}
       </section>
     </div>
