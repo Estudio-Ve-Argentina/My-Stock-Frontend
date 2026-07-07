@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { EmailVerificationBanner } from "./EmailVerificationBanner";
 import { SidebarNav } from "./SidebarNav";
-import { MenuIcon, CloseIcon } from "./icons";
+import { MenuIcon } from "./icons";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
@@ -60,14 +60,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               exit={{ x: "-100%" }}
               transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
             >
-              <button
-                type="button"
-                aria-label={t(ui.nav.close)}
-                onClick={() => setOpen(false)}
-                className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl text-dark-subtle hover:bg-white/10"
-              >
-                <CloseIcon />
-              </button>
               <div className="flex-1 overflow-y-auto">
                 <SidebarNav onNavigate={() => setOpen(false)} />
               </div>
