@@ -44,7 +44,8 @@ export const ui = {
     suppliers: { es: "Proveedores", en: "Suppliers" },
     branches: { es: "Sucursales", en: "Branches" },
     metrics: { es: "Métricas", en: "Metrics" },
-    reports: { es: "Informes", en: "Reports" },
+    exportInventory: { es: "Exportar inventario", en: "Export inventory" },
+    exportMovements: { es: "Exportar movimientos", en: "Export movements" },
     menu: { es: "Menú", en: "Menu" },
     close: { es: "Cerrar", en: "Close" },
     groupProducts: { es: "Productos", en: "Products" },
@@ -398,17 +399,22 @@ export const ui = {
   reports: {
     title: { es: "Exportar inventario", en: "Export inventory" },
     subtitle: {
-      es: "Descargá un Excel con la información de tus productos.",
-      en: "Download an Excel file with your product information.",
+      es: "Seleccioná los productos y descargá un Excel.",
+      en: "Select products and download an Excel file.",
     },
     selectAll: { es: "Seleccionar todo", en: "Select all" },
     deselectAll: { es: "Deseleccionar todo", en: "Deselect all" },
     selected: { es: "seleccionados", en: "selected" },
     allBranches: { es: "Todas", en: "All" },
-    splitByBranch: {
-      es: "Desglosar stock por sucursal",
-      en: "Split stock by branch",
+    separateByCategory: {
+      es: "Separar por categoría",
+      en: "Separate by category",
     },
+    separateBySupplier: {
+      es: "Separar por proveedor",
+      en: "Separate by supplier",
+    },
+    lowStockOnly: { es: "Solo stock bajo", en: "Low stock only" },
     exportExcel: { es: "Exportar Excel", en: "Export Excel" },
     exporting: { es: "Exportando…", en: "Exporting…" },
     noProducts: {
@@ -431,6 +437,20 @@ export const ui = {
       es: "Error al exportar. Intentá de nuevo.",
       en: "Export failed. Try again.",
     },
+    movementsTitle: { es: "Exportar movimientos", en: "Export movements" },
+    movementsSubtitle: {
+      es: "Descargá un Excel con los movimientos de tu inventario.",
+      en: "Download an Excel with your inventory movements.",
+    },
+    movementType: { es: "Tipo de movimiento", en: "Movement type" },
+    dateRequired: {
+      es: "Seleccioná un rango de fechas.",
+      en: "Select a date range.",
+    },
+    typeStockUpdate: { es: "Cambio de stock", en: "Stock update" },
+    typeCreated: { es: "Cargado", en: "Created" },
+    typeModified: { es: "Modificado", en: "Modified" },
+    typeDeleted: { es: "Eliminado", en: "Deleted" },
   },
   contact: {
     title: { es: "Contacto", en: "Contact" },

@@ -3,15 +3,27 @@ import { readTokenCookie } from "@/lib/auth/session";
 import { ApiError } from "./client";
 
 export interface ExportInventoryInput {
-  productIds: number[];
-  branchIds: number[];
-  splitByBranch: boolean;
+  productIds?: number[];
+  branchIds?: number[];
+  categoryIds?: number[];
+  supplierIds?: number[];
+  lowStockOnly?: boolean;
 }
 
-export async function exportInventoryExcel(
-  input: ExportInventoryInput,
+export interface ExportMovementsInput {
+  dateFrom: string;
+  dateTo: string;
+  branchIds?: number[];
+  categoryId?: number;
+  supplierId?: number;
+  movementTypes?: string[];
+}
+
+async function downloadExcel(
+  url: string,
+  body: unknown,
+  fallbackFilename: string,
 ): Promise<void> {
-  const url = `${appConfig.apiBaseUrl}/api/reports/inventory/excel`;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -24,7 +36,7 @@ export async function exportInventoryExcel(
   const response = await fetch(url, {
     method: "POST",
     headers,
-    body: JSON.stringify(input),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -41,7 +53,7 @@ export async function exportInventoryExcel(
 
   const blob = await response.blob();
   const disposition = response.headers.get("content-disposition");
-  let filename = `inventario_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  let filename = fallbackFilename;
   if (disposition) {
     const match = disposition.match(/filename="?(.+?)"?$/);
     if (match) filename = match[1];
@@ -55,4 +67,24 @@ export async function exportInventoryExcel(
   anchor.click();
   document.body.removeChild(anchor);
   URL.revokeObjectURL(blobUrl);
+}
+
+export function exportInventoryExcel(
+  input: ExportInventoryInput,
+): Promise<void> {
+  return downloadExcel(
+    `${appConfig.apiBaseUrl}/api/reports/inventory/excel`,
+    input,
+    `inventario_${new Date().toISOString().slice(0, 10)}.xlsx`,
+  );
+}
+
+export function exportMovementsExcel(
+  input: ExportMovementsInput,
+): Promise<void> {
+  return downloadExcel(
+    `${appConfig.apiBaseUrl}/api/reports/movements/excel`,
+    input,
+    `movimientos_${new Date().toISOString().slice(0, 10)}.xlsx`,
+  );
 }

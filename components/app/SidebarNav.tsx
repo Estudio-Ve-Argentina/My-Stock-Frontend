@@ -21,6 +21,7 @@ import {
   PinIcon,
   ChartIcon,
   FileIcon,
+  CalendarIcon,
   SparkIcon,
   UserIcon,
   LogoutIcon,
@@ -62,7 +63,8 @@ const NAV_GROUPS: NavGroup[] = [
     label: ui.nav.groupReports,
     items: [
       { href: "/metricas", label: ui.nav.metrics, icon: ChartIcon },
-      { href: "/informes", label: ui.nav.reports, icon: FileIcon },
+      { href: "/informes/inventario", label: ui.nav.exportInventory, icon: FileIcon },
+      { href: "/informes/movimientos", label: ui.nav.exportMovements, icon: CalendarIcon },
     ],
   },
 ];
@@ -87,7 +89,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
   }, []);
 
   function linkClass(href: string): string {
-    const active = pathname === href;
+    const active = pathname === href || pathname.startsWith(href + "/");
     return `group relative mr-3 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
       active
         ? "bg-gradient-to-r from-brand to-brand-dark text-brand-foreground ring-1 ring-neon/40 shadow-[0_10px_28px_-8px_rgba(52,240,138,0.65)]"

@@ -8,15 +8,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useBranches } from "@/hooks/useBranches";
+import { useSuppliers } from "@/hooks/useSuppliers";
 import { exportInventoryExcel } from "@/lib/api/reports";
 import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
+import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
 import { DownloadIcon } from "./icons";
 
-function stockBadge(product: ProductResponse): string {
-  if (product.stock === 0) return "bg-danger/10 text-danger";
-  if (product.lowStock) return "bg-accent-soft text-accent-foreground";
+function stockBadge(p: ProductResponse): string {
+  if (p.stock === 0) return "bg-danger/10 text-danger";
+  if (p.lowStock) return "bg-accent-soft text-accent-foreground";
   return "bg-brand-soft text-brand-dark";
 }
 
@@ -47,22 +49,81 @@ function CheckMark({ checked }: { checked: boolean }) {
   );
 }
 
+function ProductRow({
+  product,
+  selected,
+  odd,
+  lowStockLabel,
+  onToggle,
+}: {
+  product: ProductResponse;
+  selected: boolean;
+  odd: boolean;
+  lowStockLabel: string;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`flex w-full cursor-pointer items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-brand-soft/10 ${
+        selected ? "bg-brand-tint/40" : odd ? "bg-muted/15" : ""
+      }`}
+    >
+      <CheckMark checked={selected} />
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="truncate font-heading text-sm font-semibold text-foreground">
+          {product.name}
+        </span>
+        {product.lowStock && (
+          <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+            {lowStockLabel}
+          </span>
+        )}
+      </div>
+      {product.categoryName && (
+        <span className="hidden shrink-0 text-xs text-subtle sm:block">
+          {product.categoryName}
+        </span>
+      )}
+      <span
+        className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-bold tabular-nums ${stockBadge(product)}`}
+      >
+        {product.stock}
+      </span>
+    </button>
+  );
+}
+
+interface ProductGroup {
+  label: string | null;
+  subgroups: { label: string | null; products: ProductResponse[] }[];
+}
+
 export function ExportView() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { products, loading, error } = useProducts(user?.username);
   const { categories } = useCategories();
   const { branches } = useBranches();
+  const { suppliers } = useSuppliers();
 
   const isFreePlan = user?.planName === "FREE";
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState("");
-  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
+  const [filterCategoryIds, setFilterCategoryIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [filterSupplierIds, setFilterSupplierIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [selectedBranchIds, setSelectedBranchIds] = useState<Set<number>>(
     new Set(),
   );
-  const [splitByBranch, setSplitByBranch] = useState(false);
+  const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [separateByCategory, setSeparateByCategory] = useState(false);
+  const [separateBySupplier, setSeparateBySupplier] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -73,15 +134,31 @@ export function ExportView() {
 
   const filtered = useMemo(() => {
     let result = activeProducts;
-    if (filterCategoryId !== null) {
-      result = result.filter((p) => p.categoryId === filterCategoryId);
-    }
+    if (filterCategoryIds.size > 0)
+      result = result.filter(
+        (p) => p.categoryId !== null && filterCategoryIds.has(p.categoryId),
+      );
+    if (filterSupplierIds.size > 0)
+      result = result.filter(
+        (p) => p.supplierId !== null && filterSupplierIds.has(p.supplierId),
+      );
+    if (selectedBranchIds.size > 0)
+      result = result.filter((p) =>
+        p.branchStocks?.some((bs) => selectedBranchIds.has(bs.branchId)),
+      );
+    if (lowStockOnly) result = result.filter((p) => p.lowStock);
     const term = query.trim().toLowerCase();
-    if (term) {
+    if (term)
       result = result.filter((p) => p.name.toLowerCase().includes(term));
-    }
     return result;
-  }, [activeProducts, query, filterCategoryId]);
+  }, [
+    activeProducts,
+    query,
+    filterCategoryIds,
+    filterSupplierIds,
+    selectedBranchIds,
+    lowStockOnly,
+  ]);
 
   const validSelectedCount = useMemo(
     () => activeProducts.filter((p) => selectedIds.has(p.id)).length,
@@ -93,6 +170,61 @@ export function ExportView() {
     [filtered, selectedIds],
   );
 
+  const grouped = useMemo((): ProductGroup[] | null => {
+    if (!separateBySupplier && !separateByCategory) return null;
+
+    const noSup = t(ui.products.noSupplier);
+    const noCat = t(ui.products.noCategory);
+
+    if (separateBySupplier && !separateByCategory) {
+      const map = new Map<string, ProductResponse[]>();
+      for (const p of filtered) {
+        const key = p.supplierName ?? noSup;
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(p);
+      }
+      return [...map].map(([label, prods]) => ({
+        label,
+        subgroups: [{ label: null, products: prods }],
+      }));
+    }
+
+    if (!separateBySupplier && separateByCategory) {
+      const map = new Map<string, ProductResponse[]>();
+      for (const p of filtered) {
+        const key = p.categoryName ?? noCat;
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(p);
+      }
+      return [
+        {
+          label: null,
+          subgroups: [...map].map(([label, prods]) => ({
+            label,
+            products: prods,
+          })),
+        },
+      ];
+    }
+
+    const outer = new Map<string, Map<string, ProductResponse[]>>();
+    for (const p of filtered) {
+      const sKey = p.supplierName ?? noSup;
+      const cKey = p.categoryName ?? noCat;
+      if (!outer.has(sKey)) outer.set(sKey, new Map());
+      const inner = outer.get(sKey)!;
+      if (!inner.has(cKey)) inner.set(cKey, []);
+      inner.get(cKey)!.push(p);
+    }
+    return [...outer].map(([sLabel, catMap]) => ({
+      label: sLabel,
+      subgroups: [...catMap].map(([cLabel, prods]) => ({
+        label: cLabel,
+        products: prods,
+      })),
+    }));
+  }, [filtered, separateBySupplier, separateByCategory, t]);
+
   const selectAllVisible = useCallback(() => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -101,9 +233,7 @@ export function ExportView() {
     });
   }, [filtered]);
 
-  const deselectAll = useCallback(() => {
-    setSelectedIds(new Set());
-  }, []);
+  const deselectAll = useCallback(() => setSelectedIds(new Set()), []);
 
   const toggleProduct = useCallback((id: number) => {
     setSelectedIds((prev) => {
@@ -114,31 +244,30 @@ export function ExportView() {
     });
   }, []);
 
-  const toggleBranch = useCallback((branchId: number) => {
-    setSelectedBranchIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(branchId)) next.delete(branchId);
-      else next.add(branchId);
-      return next;
-    });
-  }, []);
-
-  const selectAllBranches = useCallback(() => {
-    setSelectedBranchIds(new Set());
-  }, []);
-
-  const allBranchesMode = selectedBranchIds.size === 0;
-  const hasBranches = branches.length > 0;
+  const canExport = !isFreePlan && !exporting && validSelectedCount > 0;
 
   const handleExport = useCallback(async () => {
-    if (validSelectedCount === 0 || isFreePlan || exporting) return;
+    if (!canExport) return;
     setExporting(true);
     setExportError(null);
     try {
       await exportInventoryExcel({
         productIds: Array.from(selectedIds),
-        branchIds: Array.from(selectedBranchIds),
-        splitByBranch: allBranchesMode ? splitByBranch : false,
+        branchIds:
+          selectedBranchIds.size > 0
+            ? Array.from(selectedBranchIds)
+            : undefined,
+        categoryIds: separateByCategory
+          ? filterCategoryIds.size > 0
+            ? Array.from(filterCategoryIds)
+            : categories.map((c) => c.id)
+          : undefined,
+        supplierIds: separateBySupplier
+          ? filterSupplierIds.size > 0
+            ? Array.from(filterSupplierIds)
+            : suppliers.map((s) => s.id)
+          : undefined,
+        lowStockOnly: lowStockOnly || undefined,
       });
     } catch (caught) {
       setExportError(resolveErrorMessage(caught, t));
@@ -146,18 +275,23 @@ export function ExportView() {
       setExporting(false);
     }
   }, [
-    validSelectedCount,
+    canExport,
     selectedIds,
     selectedBranchIds,
-    allBranchesMode,
-    splitByBranch,
-    isFreePlan,
-    exporting,
+    separateByCategory,
+    separateBySupplier,
+    filterCategoryIds,
+    filterSupplierIds,
+    categories,
+    suppliers,
+    lowStockOnly,
     t,
   ]);
 
+  const lowStockLabel = t(ui.products.lowStock);
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
           {t(ui.reports.title)}
@@ -206,168 +340,151 @@ export function ExportView() {
 
       {!loading && !error && activeProducts.length > 0 && (
         <>
-          <section className="flex flex-col gap-4">
-            <h2 className="font-heading text-lg font-bold tracking-tight text-foreground">
-              {t(ui.nav.products)}
-            </h2>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t(ui.products.search)}
-                className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base caret-brand text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10 sm:max-w-xs"
-              />
-              {categories.length > 0 && (
-                <select
-                  value={filterCategoryId ?? ""}
-                  onChange={(e) =>
-                    setFilterCategoryId(
-                      e.target.value ? Number(e.target.value) : null,
-                    )
-                  }
-                  className="select-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-base font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:max-w-52"
-                >
-                  <option value="">{t(ui.products.allCategories)}</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t(ui.products.search)}
+              className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-base caret-brand text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10 sm:max-w-xs"
+            />
+            {categories.length > 0 && (
               <button
                 type="button"
-                onClick={allVisibleSelected ? deselectAll : selectAllVisible}
-                className="cursor-pointer text-sm font-semibold text-brand transition-colors hover:text-brand-dark"
+                onClick={() => setSeparateByCategory((v) => !v)}
+                className="flex cursor-pointer items-center gap-2"
               >
-                {allVisibleSelected
-                  ? t(ui.reports.deselectAll)
-                  : t(ui.reports.selectAll)}
+                <CheckMark checked={separateByCategory} />
+                <span className="text-sm font-medium text-foreground">
+                  {t(ui.reports.separateByCategory)}
+                </span>
               </button>
-              <span className="text-sm tabular-nums text-subtle">
-                {validSelectedCount} {t(ui.reports.selected)}
+            )}
+            {suppliers.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSeparateBySupplier((v) => !v)}
+                className="flex cursor-pointer items-center gap-2"
+              >
+                <CheckMark checked={separateBySupplier} />
+                <span className="text-sm font-medium text-foreground">
+                  {t(ui.reports.separateBySupplier)}
+                </span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setLowStockOnly((v) => !v)}
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <CheckMark checked={lowStockOnly} />
+              <span className="text-sm font-medium text-foreground">
+                {t(ui.reports.lowStockOnly)}
               </span>
-            </div>
+            </button>
+          </div>
 
-            <div className="max-h-96 overflow-y-auto rounded-2xl border border-border bg-surface shadow-[0_8px_30px_-8px_rgba(22,163,74,0.08)]">
-              {filtered.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-subtle">
-                  {t(ui.products.noResults)}
-                </p>
-              ) : (
-                filtered.map((product, index) => {
-                  const isSelected = selectedIds.has(product.id);
-                  return (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => toggleProduct(product.id)}
-                      className={`flex w-full cursor-pointer items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-brand-soft/10 ${
-                        isSelected
-                          ? "bg-brand-tint/40"
-                          : index % 2 === 1
-                            ? "bg-muted/15"
-                            : ""
-                      }`}
-                    >
-                      <CheckMark checked={isSelected} />
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
-                        {product.pinned && (
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="shrink-0 text-brand"
-                          >
-                            <path d="M12 17v5M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7" />
-                            <path d="M5 11h14l-1.5 6H6.5L5 11Z" />
-                          </svg>
-                        )}
-                        <span className="truncate font-heading text-sm font-semibold text-foreground">
-                          {product.name}
-                        </span>
-                        {product.lowStock && (
-                          <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
-                            {t(ui.products.lowStock)}
-                          </span>
-                        )}
-                      </div>
-                      {product.categoryName && (
-                        <span className="hidden shrink-0 text-xs text-subtle sm:block">
-                          {product.categoryName}
-                        </span>
-                      )}
-                      <span
-                        className={`shrink-0 rounded-lg px-2 py-0.5 text-xs font-bold tabular-nums ${stockBadge(product)}`}
-                      >
-                        {product.stock}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+              <span className="text-xs font-semibold text-subtle">
+                {t(ui.nav.categories)}
+              </span>
+              <MultiSelectDropdown
+                items={categories}
+                selectedIds={filterCategoryIds}
+                onChange={setFilterCategoryIds}
+                allLabel={t(ui.products.allCategories)}
+                selectedLabel={t(ui.nav.categories).toLowerCase()}
+              />
             </div>
-          </section>
-
-          {hasBranches && (
-            <section className="flex flex-col gap-4">
-              <h2 className="font-heading text-lg font-bold tracking-tight text-foreground">
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+              <span className="text-xs font-semibold text-subtle">
+                {t(ui.nav.suppliers)}
+              </span>
+              <MultiSelectDropdown
+                items={suppliers}
+                selectedIds={filterSupplierIds}
+                onChange={setFilterSupplierIds}
+                allLabel={t(ui.products.allSuppliers)}
+                selectedLabel={t(ui.nav.suppliers).toLowerCase()}
+              />
+            </div>
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+              <span className="text-xs font-semibold text-subtle">
                 {t(ui.nav.branches)}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={selectAllBranches}
-                  className={`cursor-pointer rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                    allBranchesMode
-                      ? "bg-brand text-brand-foreground shadow-[0_4px_12px_-2px_rgba(22,163,74,0.3)]"
-                      : "bg-muted text-subtle hover:bg-border hover:text-foreground"
-                  }`}
-                >
-                  {t(ui.reports.allBranches)}
-                </button>
-                {branches.map((branch) => {
-                  const active = selectedBranchIds.has(branch.id);
-                  return (
-                    <button
-                      key={branch.id}
-                      type="button"
-                      onClick={() => toggleBranch(branch.id)}
-                      className={`cursor-pointer rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                        active
-                          ? "bg-brand text-brand-foreground shadow-[0_4px_12px_-2px_rgba(22,163,74,0.3)]"
-                          : "bg-muted text-subtle hover:bg-border hover:text-foreground"
-                      }`}
-                    >
-                      {branch.name}
-                    </button>
-                  );
-                })}
-              </div>
-              {allBranchesMode && (
-                <button
-                  type="button"
-                  onClick={() => setSplitByBranch((v) => !v)}
-                  className="flex cursor-pointer items-center gap-2.5 self-start"
-                >
-                  <CheckMark checked={splitByBranch} />
-                  <span className="text-sm font-medium text-foreground">
-                    {t(ui.reports.splitByBranch)}
-                  </span>
-                </button>
-              )}
-            </section>
-          )}
+              </span>
+              <MultiSelectDropdown
+                items={branches}
+                selectedIds={selectedBranchIds}
+                onChange={setSelectedBranchIds}
+                allLabel={t(ui.products.allBranches)}
+                selectedLabel={t(ui.nav.branches).toLowerCase()}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={allVisibleSelected ? deselectAll : selectAllVisible}
+              className="cursor-pointer text-sm font-semibold text-brand transition-colors hover:text-brand-dark"
+            >
+              {allVisibleSelected
+                ? t(ui.reports.deselectAll)
+                : t(ui.reports.selectAll)}
+            </button>
+            <span className="text-sm tabular-nums text-subtle">
+              {validSelectedCount} {t(ui.reports.selected)}
+            </span>
+          </div>
+
+          <div className="max-h-[28rem] overflow-y-auto rounded-2xl border border-border bg-surface shadow-[0_8px_30px_-8px_rgba(22,163,74,0.08)]">
+            {filtered.length === 0 ? (
+              <p className="px-4 py-8 text-center text-sm text-subtle">
+                {t(ui.products.noResults)}
+              </p>
+            ) : grouped ? (
+              grouped.map((group, gi) => (
+                <div key={group.label ?? gi}>
+                  {group.label && (
+                    <div className="sticky top-0 z-10 border-b border-dark-border bg-dark px-4 py-2 text-xs font-bold uppercase tracking-wider text-dark-foreground">
+                      {group.label}
+                    </div>
+                  )}
+                  {group.subgroups.map((sub, si) => (
+                    <div key={sub.label ?? si}>
+                      {sub.label && (
+                        <div className="border-b border-border/60 bg-muted/50 px-4 py-1.5 pl-6 text-[11px] font-bold uppercase tracking-wider text-subtle">
+                          {sub.label}
+                        </div>
+                      )}
+                      {sub.products.map((product, pi) => (
+                        <ProductRow
+                          key={product.id}
+                          product={product}
+                          selected={selectedIds.has(product.id)}
+                          odd={pi % 2 === 1}
+                          lowStockLabel={lowStockLabel}
+                          onToggle={() => toggleProduct(product.id)}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))
+            ) : (
+              filtered.map((product, index) => (
+                <ProductRow
+                  key={product.id}
+                  product={product}
+                  selected={selectedIds.has(product.id)}
+                  odd={index % 2 === 1}
+                  lowStockLabel={lowStockLabel}
+                  onToggle={() => toggleProduct(product.id)}
+                />
+              ))
+            )}
+          </div>
 
           <footer className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             {validSelectedCount === 0 && !exportError && (
@@ -383,7 +500,7 @@ export function ExportView() {
             <Button
               variant="primary"
               size="sm"
-              disabled={validSelectedCount === 0 || isFreePlan || exporting}
+              disabled={!canExport}
               onClick={handleExport}
               className="gap-2"
             >

@@ -1,5 +1,5 @@
-import { ExportView } from "@/components/app/ExportView";
+import { redirect } from "next/navigation";
 
 export default function ReportsPage() {
-  return <ExportView />;
+  redirect("/informes/inventario");
 }
