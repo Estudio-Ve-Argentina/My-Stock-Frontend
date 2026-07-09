@@ -3,7 +3,7 @@
 import { type ComponentType, type SVGProps, useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+
 import type { Localized } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -126,44 +126,36 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
                 <button
                   type="button"
                   onClick={() => toggleGroup(index)}
-                  className="flex w-full cursor-pointer items-center gap-2 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-dark-subtle/60 transition-colors hover:text-dark-subtle"
+                  className="flex w-full cursor-pointer items-center gap-2 px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-dark-subtle/60 transition-colors hover:text-dark-subtle active:text-dark-foreground"
                 >
-                  <motion.span
-                    animate={{ rotate: isCollapsed ? -90 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronDownIcon className="h-3 w-3" />
-                  </motion.span>
+                  <ChevronDownIcon
+                    className={`h-3 w-3 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
+                  />
                   {t(group.label)}
                 </button>
-                <AnimatePresence initial={false}>
-                  {!isCollapsed && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-0.5 flex flex-col gap-0.5">
-                        {group.items.map((entry) => {
-                          const EntryIcon = entry.icon;
-                          return (
-                            <Link
-                              key={entry.href}
-                              href={entry.href}
-                              onClick={onNavigate}
-                              className={linkClass(entry.href)}
-                            >
-                              <EntryIcon className="h-5 w-5 shrink-0" />
-                              {t(entry.label)}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div
+                  className="grid transition-[grid-template-rows] duration-200 ease-out"
+                  style={{ gridTemplateRows: isCollapsed ? "0fr" : "1fr" }}
+                >
+                  <div className="overflow-hidden">
+                    <div className="mt-0.5 flex flex-col gap-0.5">
+                      {group.items.map((entry) => {
+                        const EntryIcon = entry.icon;
+                        return (
+                          <Link
+                            key={entry.href}
+                            href={entry.href}
+                            onClick={onNavigate}
+                            className={linkClass(entry.href)}
+                          >
+                            <EntryIcon className="h-5 w-5 shrink-0" />
+                            {t(entry.label)}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}

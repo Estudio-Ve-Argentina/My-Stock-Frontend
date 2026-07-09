@@ -36,35 +36,35 @@ export function MovementItem({ movement }: { movement: Movement }) {
   const meta = typeMeta[movement.type];
 
   return (
-    <li className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-5 py-3.5 shadow-[0_4px_16px_-4px_rgba(22,163,74,0.08)] transition-shadow hover:shadow-[0_8px_24px_-4px_rgba(22,163,74,0.14)]">
-      <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-        <span className={`shrink-0 self-start rounded-full px-3 py-1 text-sm font-semibold sm:self-auto ${meta.chip}`}>
+    <li className="flex items-center justify-between gap-2.5 rounded-xl border border-border bg-surface px-4 py-2.5 shadow-[0_4px_16px_-4px_rgba(22,163,74,0.08)] transition-shadow hover:shadow-[0_8px_24px_-4px_rgba(22,163,74,0.14)]">
+      <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2.5">
+        <span className={`shrink-0 self-start rounded-full px-2.5 py-0.5 text-xs font-semibold sm:self-auto ${meta.chip}`}>
           {t(meta.label)}
         </span>
-        <span className="truncate font-heading text-base font-semibold text-foreground">
+        <span className="truncate font-heading text-sm font-semibold text-foreground">
           {movement.productName}
         </span>
         <div className="flex gap-1.5">
           {movement.reason && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-subtle">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-subtle">
               {t(reasonLabels[movement.reason])}
             </span>
           )}
           {movement.branchName && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-subtle">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-subtle">
               {movement.branchName}
             </span>
           )}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2.5">
         {meta.sign && movement.quantity > 0 && (
-          <span className="font-heading text-base font-bold tabular-nums text-foreground">
+          <span className="font-heading text-sm font-bold tabular-nums text-foreground">
             {meta.sign}
             {movement.quantity}
           </span>
         )}
-        <span className="text-sm text-subtle">{timeLabel(movement.at, locale)}</span>
+        <span className="text-xs text-subtle">{timeLabel(movement.at, locale)}</span>
       </div>
     </li>
   );

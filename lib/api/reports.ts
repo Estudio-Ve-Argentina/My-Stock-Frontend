@@ -21,6 +21,8 @@ export interface ExportMovementsInput {
 
 export interface LowStockPdfInput {
   branchIds?: number[];
+  categoryIds?: number[];
+  supplierIds?: number[];
   lowStockOnly?: boolean;
 }
 

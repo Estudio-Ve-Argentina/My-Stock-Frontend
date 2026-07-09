@@ -321,7 +321,7 @@ export function ExportMovementsView() {
         </div>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold text-subtle">
             {t(ui.history.filterFrom)}
@@ -352,8 +352,8 @@ export function ExportMovementsView() {
         </label>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
-        <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+      <div className="flex gap-2 sm:flex-wrap sm:gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
           <span className="text-xs font-semibold text-subtle">
             {t(ui.nav.categories)}
           </span>
@@ -365,7 +365,7 @@ export function ExportMovementsView() {
             selectedLabel={t(ui.nav.categories).toLowerCase()}
           />
         </div>
-        <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
           <span className="text-xs font-semibold text-subtle">
             {t(ui.nav.suppliers)}
           </span>
@@ -377,7 +377,7 @@ export function ExportMovementsView() {
             selectedLabel={t(ui.nav.suppliers).toLowerCase()}
           />
         </div>
-        <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
           <span className="text-xs font-semibold text-subtle">
             {t(ui.nav.branches)}
           </span>

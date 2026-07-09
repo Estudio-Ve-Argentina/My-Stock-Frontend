@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { resolveErrorMessage } from "@/lib/error-utils";
@@ -21,13 +22,17 @@ type ModalState =
 function ActionMenu({
   onEdit,
   onDelete,
+  onViewProducts,
   editLabel,
   deleteLabel,
+  viewProductsLabel,
 }: {
   onEdit: () => void;
   onDelete: () => void;
+  onViewProducts?: () => void;
   editLabel: string;
   deleteLabel: string;
+  viewProductsLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [dropUp, setDropUp] = useState(false);
@@ -72,6 +77,22 @@ function ActionMenu({
         <div
           className={`absolute right-0 z-20 min-w-40 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-[0_12px_36px_-8px_rgba(22,163,74,0.18)] ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}
         >
+          {onViewProducts && viewProductsLabel && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onViewProducts();
+              }}
+              className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-brand-soft/15 md:hidden"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-subtle">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              {viewProductsLabel}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -107,6 +128,7 @@ function ActionMenu({
 
 export function CategoriesView() {
   const { t } = useLanguage();
+  const router = useRouter();
   const { user } = useAuth();
   const { categories, loading, error, reload, add, rename, remove } =
     useCategories();
@@ -296,7 +318,7 @@ export function CategoriesView() {
                         </span>
                         <Link
                           href={`/productos?categoryId=${category.id}`}
-                          className="text-xs font-semibold text-brand transition-colors hover:text-brand-dark hover:underline"
+                          className="hidden text-xs font-semibold text-brand transition-colors hover:text-brand-dark hover:underline md:inline"
                         >
                           {t(ui.categories.viewProducts)}
                         </Link>
@@ -307,6 +329,7 @@ export function CategoriesView() {
                         <ActionMenu
                           editLabel={t(ui.categories.rename)}
                           deleteLabel={t(ui.common.delete)}
+                          viewProductsLabel={t(ui.categories.viewProducts)}
                           onEdit={() =>
                             setModal({
                               kind: "rename",
@@ -320,6 +343,9 @@ export function CategoriesView() {
                               id: category.id,
                               name: category.name,
                             })
+                          }
+                          onViewProducts={() =>
+                            router.push(`/productos?categoryId=${category.id}`)
                           }
                         />
                       </div>

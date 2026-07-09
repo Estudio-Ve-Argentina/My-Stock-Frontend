@@ -134,7 +134,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
     try {
       const input: ProductRequest = {
         name: name.trim(),
-        description: description.trim() || "-",
+        description: description.trim(),
         stock: totalStock,
         userId,
         categoryId: categoryId || undefined,
@@ -369,10 +369,10 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                   {distributions.length > 0 && (
                     <div className="flex items-center gap-2 px-3">
                       <span className="min-w-0 flex-1" />
-                      <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+                      <span className="w-14 text-center text-[11px] font-bold uppercase tracking-wider text-subtle sm:w-20">
                         {t(ui.products.stock)}
                       </span>
-                      <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+                      <span className="w-14 text-center text-[11px] font-bold uppercase tracking-wider text-subtle sm:w-20">
                         {t(ui.products.minStockLabel)}
                       </span>
                       <span className="w-8" />
@@ -387,7 +387,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                         key={dist.branchId}
                         className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2"
                       >
-                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                        <span className="line-clamp-2 min-w-0 flex-1 break-words text-sm font-medium leading-snug text-foreground">
                           {branch?.name}
                         </span>
                         <input
@@ -398,7 +398,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                             updateDistribution(i, "stock", e.target.value)
                           }
                           placeholder={t(ui.products.stock)}
-                          className="w-20 rounded-lg border border-border bg-surface px-3 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand"
+                          className="w-14 rounded-lg border border-border bg-surface px-2 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand sm:w-20 sm:px-3"
                         />
                         <input
                           type="number"
@@ -408,7 +408,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
                             updateDistribution(i, "minStock", e.target.value)
                           }
                           placeholder={t(ui.products.minStockLabel)}
-                          className="w-20 rounded-lg border border-border bg-surface px-3 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand"
+                          className="w-14 rounded-lg border border-border bg-surface px-2 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand sm:w-20 sm:px-3"
                           title={t(ui.products.minStockLabel)}
                         />
                         <button

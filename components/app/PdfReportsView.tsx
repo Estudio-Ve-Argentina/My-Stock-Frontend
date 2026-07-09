@@ -41,8 +41,6 @@ const SUMMARY_SECTIONS: { value: SummarySection; label: Localized }[] = [
   { value: "MOVEMENT_SUMMARY", label: ui.pdfReports.sectionMovementSummary },
 ];
 
-const PERIOD_PRESETS = [7, 15, 30, 60, 90];
-
 const MOVEMENT_TYPES: { value: BackendMovementType; label: Localized }[] = [
   { value: "STOCK_UPDATE", label: ui.reports.typeStockUpdate },
   { value: "PRODUCT_CREATED", label: ui.reports.typeCreated },
@@ -56,6 +54,12 @@ function todayISO(): string {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+}
+
+function daysBetween(from: string, to: string): number {
+  const a = new Date(from + "T00:00:00");
+  const b = new Date(to + "T00:00:00");
+  return Math.max(Math.round((b.getTime() - a.getTime()) / 86_400_000), 1);
 }
 
 type ReportId = "summary" | "low-stock" | "movements";
@@ -141,20 +145,28 @@ export function PdfReportsView() {
   const [generating, setGenerating] = useState<ReportId | null>(null);
   const [errors, setErrors] = useState<Partial<Record<ReportId, string>>>({});
 
+  const today = todayISO();
+
   const [summaryBranchIds, setSummaryBranchIds] = useState<Set<number>>(
     new Set(),
   );
-  const [summarySections, setSummarySections] = useState<Set<SummarySection>>(
+  const [summarySectionIds, setSummarySectionIds] = useState<Set<number>>(
     new Set(),
   );
-  const [summaryPeriodDays, setSummaryPeriodDays] = useState(30);
+  const [summaryDateFrom, setSummaryDateFrom] = useState(today);
+  const [summaryDateTo, setSummaryDateTo] = useState(today);
 
   const [lowStockBranchIds, setLowStockBranchIds] = useState<Set<number>>(
     new Set(),
   );
+  const [lowStockCategoryIds, setLowStockCategoryIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [lowStockSupplierIds, setLowStockSupplierIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [lowStockOnly, setLowStockOnly] = useState(true);
 
-  const today = todayISO();
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
   const [movBranchIds, setMovBranchIds] = useState<Set<number>>(new Set());
@@ -168,10 +180,44 @@ export function PdfReportsView() {
     new Set(),
   );
 
-  const lowStockCount = useMemo(
-    () => products.filter((p) => p.active && p.lowStock).length,
-    [products],
+  const sectionItems = useMemo(
+    () => SUMMARY_SECTIONS.map((s, i) => ({ id: i, name: t(s.label) })),
+    [t],
   );
+
+  const lowStockCount = useMemo(() => {
+    let filtered = products.filter((p) => p.active);
+
+    if (lowStockOnly) {
+      filtered = filtered.filter((p) => p.lowStock || p.stock === 0);
+    }
+
+    if (lowStockCategoryIds.size > 0) {
+      filtered = filtered.filter(
+        (p) => p.categoryId !== null && lowStockCategoryIds.has(p.categoryId),
+      );
+    }
+
+    if (lowStockSupplierIds.size > 0) {
+      filtered = filtered.filter(
+        (p) => p.supplierId !== null && lowStockSupplierIds.has(p.supplierId),
+      );
+    }
+
+    if (lowStockBranchIds.size > 0) {
+      filtered = filtered.filter((p) =>
+        p.branchStocks.some((bs) => lowStockBranchIds.has(bs.branchId)),
+      );
+    }
+
+    return filtered.length;
+  }, [
+    products,
+    lowStockOnly,
+    lowStockCategoryIds,
+    lowStockSupplierIds,
+    lowStockBranchIds,
+  ]);
 
   const movementsInRange = useMemo(() => {
     if (!dateFrom || !dateTo) return movements.length;
@@ -197,24 +243,36 @@ export function PdfReportsView() {
       clearError(id);
       try {
         switch (id) {
-          case "summary":
+          case "summary": {
+            const sections =
+              summarySectionIds.size > 0
+                ? SUMMARY_SECTIONS.filter((_, i) =>
+                    summarySectionIds.has(i),
+                  ).map((s) => s.value)
+                : undefined;
             await exportSummaryPdf({
               branchIds:
                 summaryBranchIds.size > 0
                   ? Array.from(summaryBranchIds)
                   : undefined,
-              sections:
-                summarySections.size > 0
-                  ? Array.from(summarySections)
-                  : undefined,
-              periodDays: summaryPeriodDays,
+              sections,
+              periodDays: daysBetween(summaryDateFrom, summaryDateTo),
             });
             break;
+          }
           case "low-stock":
             await exportLowStockPdf({
               branchIds:
                 lowStockBranchIds.size > 0
                   ? Array.from(lowStockBranchIds)
+                  : undefined,
+              categoryIds:
+                lowStockCategoryIds.size > 0
+                  ? Array.from(lowStockCategoryIds)
+                  : undefined,
+              supplierIds:
+                lowStockSupplierIds.size > 0
+                  ? Array.from(lowStockSupplierIds)
                   : undefined,
               lowStockOnly,
             });
@@ -254,9 +312,12 @@ export function PdfReportsView() {
       generating,
       clearError,
       summaryBranchIds,
-      summarySections,
-      summaryPeriodDays,
+      summarySectionIds,
+      summaryDateFrom,
+      summaryDateTo,
       lowStockBranchIds,
+      lowStockCategoryIds,
+      lowStockSupplierIds,
       lowStockOnly,
       dateFrom,
       dateTo,
@@ -267,15 +328,6 @@ export function PdfReportsView() {
       t,
     ],
   );
-
-  const toggleSummarySection = useCallback((section: SummarySection) => {
-    setSummarySections((prev) => {
-      const next = new Set(prev);
-      if (next.has(section)) next.delete(section);
-      else next.add(section);
-      return next;
-    });
-  }, []);
 
   const toggleMovType = useCallback((type: BackendMovementType) => {
     setMovTypes((prev) => {
@@ -328,111 +380,136 @@ export function PdfReportsView() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Summary */}
-        <ReportCard
-          icon={ChartIcon}
-          title={t(ui.pdfReports.summaryTitle)}
-          description={t(ui.pdfReports.summaryDescription)}
-          generating={generating === "summary"}
-          generatingLabel={t(ui.pdfReports.generating)}
-          generateLabel={t(ui.pdfReports.generate)}
-          disabled={isFreePlan}
-          onGenerate={() => handleGenerate("summary")}
-          error={errors.summary ?? null}
-        >
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-              {branches.length > 0 && (
-                <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-                  <span className="text-xs font-semibold text-subtle">
-                    {t(ui.nav.branches)}
-                  </span>
-                  <MultiSelectDropdown
-                    items={branches}
-                    selectedIds={summaryBranchIds}
-                    onChange={setSummaryBranchIds}
-                    allLabel={t(ui.pdfReports.allBranches)}
-                    selectedLabel={t(ui.nav.branches).toLowerCase()}
-                  />
-                </div>
-              )}
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-subtle">
-                  {t(ui.pdfReports.periodDays)}
-                </span>
-                <div className="flex gap-1.5">
-                  {PERIOD_PRESETS.map((days) => (
-                    <button
-                      key={days}
-                      type="button"
-                      onClick={() => setSummaryPeriodDays(days)}
-                      className={chipClass(summaryPeriodDays === days)}
-                    >
-                      {days}d
-                    </button>
-                  ))}
-                </div>
-              </label>
-            </div>
+      <ReportCard
+        icon={ChartIcon}
+        title={t(ui.pdfReports.summaryTitle)}
+        description={t(ui.pdfReports.summaryDescription)}
+        generating={generating === "summary"}
+        generatingLabel={t(ui.pdfReports.generating)}
+        generateLabel={t(ui.pdfReports.generate)}
+        disabled={isFreePlan}
+        onGenerate={() => handleGenerate("summary")}
+        error={errors.summary ?? null}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-subtle">
+                {t(ui.history.filterFrom)}
+              </span>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={summaryDateFrom}
+                  onChange={(e) => setSummaryDateFrom(e.target.value)}
+                  className={dateInputClass}
+                />
+                <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand" />
+              </div>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-subtle">
+                {t(ui.history.filterTo)}
+              </span>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={summaryDateTo}
+                  onChange={(e) => setSummaryDateTo(e.target.value)}
+                  className={dateInputClass}
+                />
+                <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand" />
+              </div>
+            </label>
+          </div>
 
-            <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-subtle">
+          <div className="flex gap-2 sm:flex-wrap sm:gap-3">
+            {branches.length > 0 && (
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
+                <span className="text-xs font-semibold text-subtle">
+                  {t(ui.nav.branches)}
+                </span>
+                <MultiSelectDropdown
+                  items={branches}
+                  selectedIds={summaryBranchIds}
+                  onChange={setSummaryBranchIds}
+                  allLabel={t(ui.pdfReports.allBranches)}
+                  selectedLabel={t(ui.nav.branches).toLowerCase()}
+                />
+              </div>
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
+              <span className="text-xs font-semibold text-subtle">
                 {t(ui.pdfReports.sections)}
               </span>
-              <div className="flex flex-wrap gap-2">
-                {SUMMARY_SECTIONS.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => toggleSummarySection(value)}
-                    className={chipClass(summarySections.has(value))}
-                  >
-                    {t(label)}
-                  </button>
-                ))}
-              </div>
-              {summarySections.size === 0 && (
-                <p className="text-xs text-subtle">
-                  {t(ui.pdfReports.allSections)}
-                </p>
-              )}
+              <MultiSelectDropdown
+                items={sectionItems}
+                selectedIds={summarySectionIds}
+                onChange={setSummarySectionIds}
+                allLabel={t(ui.pdfReports.allSections)}
+                selectedLabel={t(ui.pdfReports.sections).toLowerCase()}
+              />
             </div>
           </div>
-        </ReportCard>
+        </div>
+      </ReportCard>
 
-        {/* Low Stock */}
-        <ReportCard
-          icon={AlertIcon}
-          title={t(ui.pdfReports.lowStockTitle)}
-          description={t(ui.pdfReports.lowStockDescription)}
-          generating={generating === "low-stock"}
-          generatingLabel={t(ui.pdfReports.generating)}
-          generateLabel={t(ui.pdfReports.generate)}
-          disabled={isFreePlan}
-          onGenerate={() => handleGenerate("low-stock")}
-          error={errors["low-stock"] ?? null}
-        >
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              {branches.length > 0 && (
-                <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-                  <span className="text-xs font-semibold text-subtle">
-                    {t(ui.nav.branches)}
-                  </span>
-                  <MultiSelectDropdown
-                    items={branches}
-                    selectedIds={lowStockBranchIds}
-                    onChange={setLowStockBranchIds}
-                    allLabel={t(ui.pdfReports.allBranches)}
-                    selectedLabel={t(ui.nav.branches).toLowerCase()}
-                  />
-                </div>
-              )}
-              <span className="rounded-xl bg-accent-soft px-3 py-2 text-sm font-semibold tabular-nums text-accent-foreground">
-                {lowStockCount} {t(ui.pdfReports.lowStockCount)}
+      <ReportCard
+        icon={AlertIcon}
+        title={t(ui.pdfReports.lowStockTitle)}
+        description={t(ui.pdfReports.lowStockDescription)}
+        generating={generating === "low-stock"}
+        generatingLabel={t(ui.pdfReports.generating)}
+        generateLabel={t(ui.pdfReports.generate)}
+        disabled={isFreePlan}
+        onGenerate={() => handleGenerate("low-stock")}
+        error={errors["low-stock"] ?? null}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2 sm:flex-wrap sm:gap-3">
+            {branches.length > 0 && (
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
+                <span className="text-xs font-semibold text-subtle">
+                  {t(ui.nav.branches)}
+                </span>
+                <MultiSelectDropdown
+                  items={branches}
+                  selectedIds={lowStockBranchIds}
+                  onChange={setLowStockBranchIds}
+                  allLabel={t(ui.pdfReports.allBranches)}
+                  selectedLabel={t(ui.nav.branches).toLowerCase()}
+                />
+              </div>
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
+              <span className="text-xs font-semibold text-subtle">
+                {t(ui.nav.categories)}
               </span>
+              <MultiSelectDropdown
+                items={categories}
+                selectedIds={lowStockCategoryIds}
+                onChange={setLowStockCategoryIds}
+                allLabel={t(ui.products.allCategories)}
+                selectedLabel={t(ui.nav.categories).toLowerCase()}
+              />
             </div>
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
+              <span className="text-xs font-semibold text-subtle">
+                {t(ui.nav.suppliers)}
+              </span>
+              <MultiSelectDropdown
+                items={suppliers}
+                selectedIds={lowStockSupplierIds}
+                onChange={setLowStockSupplierIds}
+                allLabel={t(ui.products.allSuppliers)}
+                selectedLabel={t(ui.nav.suppliers).toLowerCase()}
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-xl bg-accent-soft px-3 py-2 text-sm font-semibold tabular-nums text-accent-foreground">
+              {lowStockCount} {t(ui.pdfReports.lowStockCount)}
+            </span>
             <label className="flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
@@ -450,10 +527,9 @@ export function PdfReportsView() {
               )}
             </label>
           </div>
-        </ReportCard>
-      </div>
+        </div>
+      </ReportCard>
 
-      {/* Movements */}
       <ReportCard
         icon={ClockIcon}
         title={t(ui.pdfReports.movementsTitle)}
@@ -466,7 +542,7 @@ export function PdfReportsView() {
         error={errors.movements ?? null}
       >
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold text-subtle">
                 {t(ui.history.filterFrom)}
@@ -495,7 +571,7 @@ export function PdfReportsView() {
                 <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand" />
               </div>
             </label>
-            <span className="rounded-xl bg-muted px-3 py-2.5 text-sm font-semibold tabular-nums text-subtle">
+            <span className="col-span-2 rounded-xl bg-muted px-3 py-2.5 text-center text-sm font-semibold tabular-nums text-subtle sm:col-span-1 sm:text-left">
               {movementsInRange}{" "}
               {movementsInRange === 1
                 ? locale === "es"
@@ -507,8 +583,8 @@ export function PdfReportsView() {
             </span>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
-            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+          <div className="flex gap-2 sm:flex-wrap sm:gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
               <span className="text-xs font-semibold text-subtle">
                 {t(ui.nav.categories)}
               </span>
@@ -520,7 +596,7 @@ export function PdfReportsView() {
                 selectedLabel={t(ui.nav.categories).toLowerCase()}
               />
             </div>
-            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
               <span className="text-xs font-semibold text-subtle">
                 {t(ui.nav.suppliers)}
               </span>
@@ -532,7 +608,7 @@ export function PdfReportsView() {
                 selectedLabel={t(ui.nav.suppliers).toLowerCase()}
               />
             </div>
-            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-initial">
               <span className="text-xs font-semibold text-subtle">
                 {t(ui.nav.branches)}
               </span>

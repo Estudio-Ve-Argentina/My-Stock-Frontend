@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { SupplierResponse } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -30,13 +31,17 @@ type ModalState =
 function ActionMenu({
   onEdit,
   onDelete,
+  onViewProducts,
   editLabel,
   deleteLabel,
+  viewProductsLabel,
 }: {
   onEdit: () => void;
   onDelete: () => void;
+  onViewProducts?: () => void;
   editLabel: string;
   deleteLabel: string;
+  viewProductsLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [dropUp, setDropUp] = useState(false);
@@ -81,6 +86,22 @@ function ActionMenu({
         <div
           className={`absolute right-0 z-20 min-w-40 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-[0_12px_36px_-8px_rgba(22,163,74,0.18)] ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}
         >
+          {onViewProducts && viewProductsLabel && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onViewProducts();
+              }}
+              className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-brand-soft/15 md:hidden"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-subtle">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              {viewProductsLabel}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -116,6 +137,7 @@ function ActionMenu({
 
 export function SuppliersView() {
   const { t } = useLanguage();
+  const router = useRouter();
   const { user } = useAuth();
   const { suppliers, loading, error, reload, add, update, remove } =
     useSuppliers();
@@ -300,11 +322,11 @@ export function SuppliersView() {
         <div className="rounded-2xl border border-border bg-surface shadow-[0_8px_30px_-8px_rgba(22,163,74,0.12)]">
           <table className="w-full table-fixed">
             <colgroup>
-              <col className="w-[40%] md:w-[30%]" />
-              <col className="w-[35%] md:w-[25%]" />
+              <col className="w-[33%] md:w-[25%]" />
+              <col className="w-[27%] md:w-[25%]" />
               <col className="hidden md:table-column md:w-[20%]" />
-              <col className="w-[15%] md:w-[15%]" />
-              <col className="w-[10%] md:w-16" />
+              <col className="w-[25%] md:w-[20%]" />
+              <col className="w-[15%] md:w-16" />
             </colgroup>
             <thead>
               <tr className="border-b-2 border-border bg-muted/40">
@@ -356,7 +378,7 @@ export function SuppliersView() {
                         </span>
                         <Link
                           href={`/productos?supplierId=${supplier.id}`}
-                          className="text-xs font-semibold text-brand transition-colors hover:text-brand-dark hover:underline"
+                          className="hidden text-xs font-semibold text-brand transition-colors hover:text-brand-dark hover:underline md:inline"
                         >
                           {t(ui.categories.viewProducts)}
                         </Link>
@@ -367,6 +389,7 @@ export function SuppliersView() {
                         <ActionMenu
                           editLabel={t(ui.suppliers.edit)}
                           deleteLabel={t(ui.common.delete)}
+                          viewProductsLabel={t(ui.categories.viewProducts)}
                           onEdit={() =>
                             setModal({
                               kind: "edit",
@@ -379,6 +402,9 @@ export function SuppliersView() {
                           }
                           onDelete={() =>
                             setModal({ kind: "delete", supplier })
+                          }
+                          onViewProducts={() =>
+                            router.push(`/productos?supplierId=${supplier.id}`)
                           }
                         />
                       </div>

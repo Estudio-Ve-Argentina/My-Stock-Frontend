@@ -46,15 +46,15 @@ export function StatCard({ label, value, icon: Icon, tone = "plain", index = 0 }
       animate={{ opacity: 1, y: 0, scale: 1 }}
       whileHover={reduceMotion ? undefined : { y: -8, scale: 1.04 }}
       transition={{ type: "spring", stiffness: 280, damping: 17, delay: index * 0.07 }}
-      className={`relative flex h-full flex-col gap-5 overflow-hidden rounded-2xl bg-gradient-to-br from-dark-2 to-dark p-5 text-dark-foreground ring-1 ring-dark-border ${styles.glow}`}
+      className={`relative flex h-full flex-col gap-3.5 overflow-hidden rounded-xl bg-gradient-to-br from-dark-2 to-dark p-4 text-dark-foreground ring-1 ring-dark-border ${styles.glow}`}
     >
       <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r to-transparent ${styles.bar}`} />
-      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${styles.chip}`}>
-        <Icon className="h-5 w-5" />
+      <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${styles.chip}`}>
+        <Icon className="h-4 w-4" />
       </span>
       <div>
-        <p className="font-heading text-4xl font-bold tracking-tight tabular-nums">{value}</p>
-        <p className="mt-1 text-sm font-medium text-dark-subtle">{label}</p>
+        <p className="font-heading text-3xl font-bold tracking-tight tabular-nums">{value}</p>
+        <p className="mt-0.5 text-xs font-medium text-dark-subtle">{label}</p>
       </div>
     </motion.div>
   );

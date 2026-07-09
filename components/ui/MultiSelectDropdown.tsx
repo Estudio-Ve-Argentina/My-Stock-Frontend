@@ -84,13 +84,13 @@ export function MultiSelectDropdown({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border bg-surface px-4 py-2.5 text-sm font-medium outline-none transition-all sm:min-w-48 ${
+        className={`flex w-full cursor-pointer items-center justify-between gap-1 rounded-xl border bg-surface px-3 py-2.5 text-sm font-medium outline-none transition-all sm:gap-2 sm:px-4 sm:min-w-48 ${
           open
             ? "border-brand ring-4 ring-brand/10"
             : "border-border hover:border-brand/40"
         } ${allSelected ? "text-foreground" : "text-brand"}`}
       >
-        <span className="line-clamp-2 text-left">{displayText}</span>
+        <span className="line-clamp-1 text-left">{displayText}</span>
         <ChevronDownIcon
           className={`h-4 w-4 shrink-0 text-subtle transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />

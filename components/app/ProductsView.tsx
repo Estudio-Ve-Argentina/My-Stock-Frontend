@@ -225,10 +225,10 @@ function DistributionEditor({
       {distributions.length > 0 && (
         <div className="flex items-center gap-2 px-3">
           <span className="min-w-0 flex-1" />
-          <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+          <span className="w-14 text-center text-[11px] font-bold uppercase tracking-wider text-subtle sm:w-20">
             {t(ui.products.stock)}
           </span>
-          <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+          <span className="w-14 text-center text-[11px] font-bold uppercase tracking-wider text-subtle sm:w-20">
             {t(ui.products.minStockLabel)}
           </span>
           <span className="w-8" />
@@ -241,7 +241,7 @@ function DistributionEditor({
             key={dist.branchId}
             className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2"
           >
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+            <span className="line-clamp-2 min-w-0 flex-1 break-words text-sm font-medium leading-snug text-foreground">
               {branch?.name}
             </span>
             <input
@@ -254,7 +254,7 @@ function DistributionEditor({
                 onChange(next);
               }}
               placeholder={t(ui.products.stock)}
-              className="w-20 rounded-lg border border-border bg-surface px-3 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand"
+              className="w-14 rounded-lg border border-border bg-surface px-2 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand sm:w-20 sm:px-3"
             />
             <input
               type="number"
@@ -266,7 +266,7 @@ function DistributionEditor({
                 onChange(next);
               }}
               placeholder={t(ui.products.minStockLabel)}
-              className="w-20 rounded-lg border border-border bg-surface px-3 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand"
+              className="w-14 rounded-lg border border-border bg-surface px-2 py-2 text-center text-sm font-medium tabular-nums text-foreground outline-none focus:border-brand sm:w-20 sm:px-3"
               title={t(ui.products.minStockLabel)}
             />
             <button
@@ -611,9 +611,9 @@ export function ProductsView() {
 
       {atLimit && <PlanLimitBanner />}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <div className="flex flex-col gap-3">
         {!atLimit && (
-          <LinkButton href="/cargar" variant="primary" className="mx-auto w-fit shrink-0 sm:order-5 sm:mx-0">
+          <LinkButton href="/cargar" variant="primary" className="mx-auto w-fit shrink-0 sm:mx-0">
             <PlusIcon className="h-4 w-4" />
             {t(ui.products.add)}
           </LinkButton>
@@ -623,44 +623,46 @@ export function ProductsView() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t(ui.products.search)}
-          className="w-full rounded-2xl border border-border bg-surface px-5 py-2.5 text-lg caret-brand text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10 sm:order-1 sm:min-w-0 sm:flex-1 sm:py-2 sm:rounded-xl sm:px-4 sm:text-sm"
+          className="w-full rounded-2xl border border-border bg-surface px-5 py-2.5 text-lg caret-brand text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10 sm:py-2 sm:rounded-xl sm:px-4 sm:text-sm"
         />
-        {categories.length > 0 && (
-          <div className="flex flex-col gap-1 sm:order-2">
-            <span className="text-[11px] font-bold text-subtle">{t(ui.products.categoryLabel)}</span>
-            <MultiSelectDropdown
-              items={categories}
-              selectedIds={filterCategoryIds}
-              onChange={setFilterCategoryIds}
-              allLabel={t(ui.products.allCategories)}
-              selectedLabel={t(ui.nav.categories).toLowerCase()}
-            />
-          </div>
-        )}
-        {hasMultipleBranches && (
-          <div className="flex flex-col gap-1 sm:order-3">
-            <span className="text-[11px] font-bold text-subtle">{t(ui.products.branchLabel)}</span>
-            <MultiSelectDropdown
-              items={branches}
-              selectedIds={filterBranchIds}
-              onChange={setFilterBranchIds}
-              allLabel={t(ui.products.allBranches)}
-              selectedLabel={t(ui.nav.branches).toLowerCase()}
-            />
-          </div>
-        )}
-        {suppliers.length > 0 && (
-          <div className="flex flex-col gap-1 sm:order-4">
-            <span className="text-[11px] font-bold text-subtle">{t(ui.products.supplierLabel)}</span>
-            <MultiSelectDropdown
-              items={suppliers}
-              selectedIds={filterSupplierIds}
-              onChange={setFilterSupplierIds}
-              allLabel={t(ui.products.allSuppliers)}
-              selectedLabel={t(ui.nav.suppliers).toLowerCase()}
-            />
-          </div>
-        )}
+        <div className="flex gap-2 sm:flex-wrap sm:gap-3">
+          {categories.length > 0 && (
+            <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-initial">
+              <span className="text-[11px] font-bold text-subtle">{t(ui.products.categoryLabel)}</span>
+              <MultiSelectDropdown
+                items={categories}
+                selectedIds={filterCategoryIds}
+                onChange={setFilterCategoryIds}
+                allLabel={t(ui.products.allCategories)}
+                selectedLabel={t(ui.nav.categories).toLowerCase()}
+              />
+            </div>
+          )}
+          {hasMultipleBranches && (
+            <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-initial">
+              <span className="text-[11px] font-bold text-subtle">{t(ui.products.branchLabel)}</span>
+              <MultiSelectDropdown
+                items={branches}
+                selectedIds={filterBranchIds}
+                onChange={setFilterBranchIds}
+                allLabel={t(ui.products.allBranches)}
+                selectedLabel={t(ui.nav.branches).toLowerCase()}
+              />
+            </div>
+          )}
+          {suppliers.length > 0 && (
+            <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-initial">
+              <span className="text-[11px] font-bold text-subtle">{t(ui.products.supplierLabel)}</span>
+              <MultiSelectDropdown
+                items={suppliers}
+                selectedIds={filterSupplierIds}
+                onChange={setFilterSupplierIds}
+                allLabel={t(ui.products.allSuppliers)}
+                selectedLabel={t(ui.nav.suppliers).toLowerCase()}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {loading && (
