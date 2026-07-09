@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type {
   BranchStock,
   ProductResponse,
@@ -20,6 +21,7 @@ import { TextField } from "@/components/ui/TextField";
 import { Spinner } from "@/components/ui/Spinner";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/components/ui/Toast";
+import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
 import { BranchPickerModal } from "./BranchPickerModal";
 import { PlanLimitBanner } from "./PlanLimitBanner";
 import { ChevronDownIcon, PlusIcon } from "./icons";
@@ -220,6 +222,18 @@ function DistributionEditor({
 
   return (
     <div className="flex flex-col gap-2">
+      {distributions.length > 0 && (
+        <div className="flex items-center gap-2 px-3">
+          <span className="min-w-0 flex-1" />
+          <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+            {t(ui.products.stock)}
+          </span>
+          <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+            {t(ui.products.minStockLabel)}
+          </span>
+          <span className="w-8" />
+        </div>
+      )}
       {distributions.map((dist, i) => {
         const branch = branches.find((b) => b.id === dist.branchId);
         return (
@@ -312,10 +326,21 @@ export function ProductsView() {
   const { branches } = useBranches();
   const hasMultipleBranches = branches.length > 1;
 
+  const searchParams = useSearchParams();
+
   const [query, setQuery] = useState("");
-  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
-  const [filterBranchId, setFilterBranchId] = useState<number | null>(null);
-  const [filterSupplierId, setFilterSupplierId] = useState<string>("");
+  const [filterCategoryIds, setFilterCategoryIds] = useState<Set<number>>(() => {
+    const v = searchParams.get("categoryId");
+    return v ? new Set([Number(v)]) : new Set();
+  });
+  const [filterBranchIds, setFilterBranchIds] = useState<Set<number>>(() => {
+    const v = searchParams.get("branchId");
+    return v ? new Set([Number(v)]) : new Set();
+  });
+  const [filterSupplierIds, setFilterSupplierIds] = useState<Set<number>>(() => {
+    const v = searchParams.get("supplierId");
+    return v ? new Set([Number(v)]) : new Set();
+  });
   const [modal, setModal] = useState<ModalState>({ kind: "none" });
   const [modalError, setModalError] = useState<string | null>(null);
   const [branchPickerOpen, setBranchPickerOpen] = useState(false);
@@ -328,29 +353,32 @@ export function ProductsView() {
     user?.maxProducts !== undefined &&
     activeCount >= user.maxProducts;
 
+  const singleBranchId =
+    filterBranchIds.size === 1 ? [...filterBranchIds][0] : null;
+
   function getBranchStock(product: ProductResponse): BranchStock | undefined {
-    if (!filterBranchId) return undefined;
-    return product.branchStocks?.find((bs) => bs.branchId === filterBranchId);
+    if (!singleBranchId) return undefined;
+    return product.branchStocks?.find((bs) => bs.branchId === singleBranchId);
   }
 
   const filtered = useMemo(() => {
     let result = products;
 
-    if (filterCategoryId !== null) {
-      result = result.filter((p) => p.categoryId === filterCategoryId);
-    }
-
-    if (filterBranchId !== null) {
-      result = result.filter((p) =>
-        p.branchStocks?.some((bs) => bs.branchId === filterBranchId),
+    if (filterCategoryIds.size > 0) {
+      result = result.filter(
+        (p) => p.categoryId !== null && filterCategoryIds.has(p.categoryId),
       );
     }
 
-    if (filterSupplierId === "none") {
-      result = result.filter((p) => p.supplierId === null);
-    } else if (filterSupplierId) {
+    if (filterBranchIds.size > 0) {
+      result = result.filter((p) =>
+        p.branchStocks?.some((bs) => filterBranchIds.has(bs.branchId)),
+      );
+    }
+
+    if (filterSupplierIds.size > 0) {
       result = result.filter(
-        (p) => p.supplierId === Number(filterSupplierId),
+        (p) => p.supplierId !== null && filterSupplierIds.has(p.supplierId),
       );
     }
 
@@ -360,7 +388,7 @@ export function ProductsView() {
     }
 
     return result;
-  }, [products, query, filterCategoryId, filterBranchId, filterSupplierId]);
+  }, [products, query, filterCategoryIds, filterBranchIds, filterSupplierIds]);
 
   const confirmDelete = useCallback(async () => {
     if (modal.kind !== "delete") return;
@@ -598,60 +626,40 @@ export function ProductsView() {
           className="w-full rounded-2xl border border-border bg-surface px-5 py-2.5 text-lg caret-brand text-foreground outline-none transition-all placeholder:text-subtle/50 focus:border-brand focus:ring-4 focus:ring-brand/10 sm:order-1 sm:min-w-0 sm:flex-1 sm:py-2 sm:rounded-xl sm:px-4 sm:text-sm"
         />
         {categories.length > 0 && (
-          <label className="flex flex-col gap-1 sm:order-2">
+          <div className="flex flex-col gap-1 sm:order-2">
             <span className="text-[11px] font-bold text-subtle">{t(ui.products.categoryLabel)}</span>
-            <select
-              value={filterCategoryId ?? ""}
-              onChange={(e) =>
-                setFilterCategoryId(e.target.value ? Number(e.target.value) : null)
-              }
-              className="select-field w-full truncate rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:max-w-40"
-            >
-              <option value="">{t(ui.common.all)}</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <MultiSelectDropdown
+              items={categories}
+              selectedIds={filterCategoryIds}
+              onChange={setFilterCategoryIds}
+              allLabel={t(ui.products.allCategories)}
+              selectedLabel={t(ui.nav.categories).toLowerCase()}
+            />
+          </div>
         )}
         {hasMultipleBranches && (
-          <label className="flex flex-col gap-1 sm:order-3">
+          <div className="flex flex-col gap-1 sm:order-3">
             <span className="text-[11px] font-bold text-subtle">{t(ui.products.branchLabel)}</span>
-            <select
-              value={filterBranchId ?? ""}
-              onChange={(e) =>
-                setFilterBranchId(e.target.value ? Number(e.target.value) : null)
-              }
-              className="select-field w-full truncate rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:max-w-40"
-            >
-              <option value="">{t(ui.common.all)}</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <MultiSelectDropdown
+              items={branches}
+              selectedIds={filterBranchIds}
+              onChange={setFilterBranchIds}
+              allLabel={t(ui.products.allBranches)}
+              selectedLabel={t(ui.nav.branches).toLowerCase()}
+            />
+          </div>
         )}
         {suppliers.length > 0 && (
-          <label className="flex flex-col gap-1 sm:order-4">
+          <div className="flex flex-col gap-1 sm:order-4">
             <span className="text-[11px] font-bold text-subtle">{t(ui.products.supplierLabel)}</span>
-            <select
-              value={filterSupplierId}
-              onChange={(e) => setFilterSupplierId(e.target.value)}
-              className="select-field w-full truncate rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:max-w-40"
-            >
-              <option value="">{t(ui.common.all)}</option>
-              <option value="none">{t(ui.products.noSupplier)}</option>
-              {suppliers.map((sup) => (
-                <option key={sup.id} value={sup.id}>
-                  {sup.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <MultiSelectDropdown
+              items={suppliers}
+              selectedIds={filterSupplierIds}
+              onChange={setFilterSupplierIds}
+              allLabel={t(ui.products.allSuppliers)}
+              selectedLabel={t(ui.nav.suppliers).toLowerCase()}
+            />
+          </div>
         )}
       </div>
 
@@ -773,7 +781,7 @@ export function ProductsView() {
                                   delta: -1,
                                   quantity: "1",
                                   reason: "",
-                                  branchId: filterBranchId,
+                                  branchId: singleBranchId,
                                 })
                               }
                               disabled={displayStock <= 0}
@@ -795,7 +803,7 @@ export function ProductsView() {
                                   delta: 1,
                                   quantity: "1",
                                   reason: "",
-                                  branchId: filterBranchId,
+                                  branchId: singleBranchId,
                                 })
                               }
                               className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-brand text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-dark md:h-9 md:w-9 md:text-base"
@@ -1286,7 +1294,7 @@ export function ProductsView() {
                 </select>
               </div>
 
-              {hasMultipleBranches && !filterBranchId && (
+              {hasMultipleBranches && !singleBranchId && (
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-medium text-subtle">
                     {t(ui.products.branchLabel)}
@@ -1313,9 +1321,9 @@ export function ProductsView() {
                 </div>
               )}
 
-              {filterBranchId && (
+              {singleBranchId && (
                 <p className="text-xs text-subtle">
-                  {t(ui.products.branchLabel)}: <span className="font-semibold text-foreground">{branches.find((b) => b.id === filterBranchId)?.name}</span>
+                  {t(ui.products.branchLabel)}: <span className="font-semibold text-foreground">{branches.find((b) => b.id === singleBranchId)?.name}</span>
                 </p>
               )}
             </div>

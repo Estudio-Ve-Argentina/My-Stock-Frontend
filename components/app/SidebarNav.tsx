@@ -19,9 +19,9 @@ import {
   TruckIcon,
   BuildingIcon,
   PinIcon,
-  ChartIcon,
   FileIcon,
   CalendarIcon,
+  PdfIcon,
   SparkIcon,
   UserIcon,
   LogoutIcon,
@@ -62,9 +62,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: ui.nav.groupReports,
     items: [
-      { href: "/metricas", label: ui.nav.metrics, icon: ChartIcon },
-      { href: "/informes/inventario", label: ui.nav.exportInventory, icon: FileIcon },
+{ href: "/informes/inventario", label: ui.nav.exportInventory, icon: FileIcon },
       { href: "/informes/movimientos", label: ui.nav.exportMovements, icon: CalendarIcon },
+      { href: "/informes/pdf", label: ui.nav.pdfReports, icon: PdfIcon },
     ],
   },
 ];

@@ -19,14 +19,27 @@ export interface ExportMovementsInput {
   movementTypes?: string[];
 }
 
-async function downloadExcel(
+export interface LowStockPdfInput {
+  branchIds?: number[];
+  lowStockOnly?: boolean;
+}
+
+export interface SummaryPdfInput {
+  branchIds?: number[];
+  sections?: string[];
+  periodDays?: number;
+}
+
+async function downloadReport(
   url: string,
-  body: unknown,
   fallbackFilename: string,
+  body?: unknown,
 ): Promise<void> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
+
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const token = readTokenCookie();
   if (token) {
@@ -36,7 +49,7 @@ async function downloadExcel(
   const response = await fetch(url, {
     method: "POST",
     headers,
-    body: JSON.stringify(body),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
   if (!response.ok) {
@@ -72,19 +85,45 @@ async function downloadExcel(
 export function exportInventoryExcel(
   input: ExportInventoryInput,
 ): Promise<void> {
-  return downloadExcel(
+  return downloadReport(
     `${appConfig.apiBaseUrl}/api/reports/inventory/excel`,
-    input,
     `inventario_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    input,
   );
 }
 
 export function exportMovementsExcel(
   input: ExportMovementsInput,
 ): Promise<void> {
-  return downloadExcel(
+  return downloadReport(
     `${appConfig.apiBaseUrl}/api/reports/movements/excel`,
-    input,
     `movimientos_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    input,
+  );
+}
+
+export function exportSummaryPdf(input?: SummaryPdfInput): Promise<void> {
+  return downloadReport(
+    `${appConfig.apiBaseUrl}/api/reports/summary/pdf`,
+    `resumen_ejecutivo_${new Date().toISOString().slice(0, 10)}.pdf`,
+    input ?? {},
+  );
+}
+
+export function exportLowStockPdf(input: LowStockPdfInput): Promise<void> {
+  return downloadReport(
+    `${appConfig.apiBaseUrl}/api/reports/low-stock/pdf`,
+    `alerta_stock_bajo_${new Date().toISOString().slice(0, 10)}.pdf`,
+    input,
+  );
+}
+
+export function exportMovementsPdf(
+  input: ExportMovementsInput,
+): Promise<void> {
+  return downloadReport(
+    `${appConfig.apiBaseUrl}/api/reports/movements/pdf`,
+    `movimientos_${new Date().toISOString().slice(0, 10)}.pdf`,
+    input,
   );
 }

@@ -134,7 +134,7 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
     try {
       const input: ProductRequest = {
         name: name.trim(),
-        description: description.trim(),
+        description: description.trim() || "-",
         stock: totalStock,
         userId,
         categoryId: categoryId || undefined,
@@ -177,8 +177,6 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
         label={t(ui.products.descriptionLabel)}
         name="description"
         multiline
-        required
-        minLength={10}
         maxLength={150}
         hint={t(ui.products.descriptionHint)}
         value={description}
@@ -368,6 +366,18 @@ export function ProductForm({ userId, onCreate, onDone }: ProductFormProps) {
 
               {distributeEnabled && (
                 <div className="flex flex-col gap-2">
+                  {distributions.length > 0 && (
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="min-w-0 flex-1" />
+                      <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+                        {t(ui.products.stock)}
+                      </span>
+                      <span className="w-20 text-center text-[11px] font-bold uppercase tracking-wider text-subtle">
+                        {t(ui.products.minStockLabel)}
+                      </span>
+                      <span className="w-8" />
+                    </div>
+                  )}
                   {distributions.map((dist, i) => {
                     const branch = branches.find(
                       (b) => b.id === dist.branchId,

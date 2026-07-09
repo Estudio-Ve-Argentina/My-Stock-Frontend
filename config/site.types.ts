@@ -131,6 +131,15 @@ export interface Page<T> {
   size: number;
 }
 
+export type SummarySection =
+  | "KPI"
+  | "CATEGORY_BREAKDOWN"
+  | "CRITICAL_STOCK"
+  | "TOP_MOVERS"
+  | "NO_MOVEMENT"
+  | "NEW_PRODUCTS"
+  | "MOVEMENT_SUMMARY";
+
 export type BackendMovementType =
   | "STOCK_UPDATE"
   | "PRODUCT_CREATED"

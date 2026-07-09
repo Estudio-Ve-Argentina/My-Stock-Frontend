@@ -27,8 +27,7 @@ export const config = {
     "/proveedores/:path*",
     "/sucursales/:path*",
     "/favoritos/:path*",
-    "/metricas/:path*",
-    "/informes/:path*",
+"/informes/:path*",
     "/onboarding/:path*",
   ],
 };

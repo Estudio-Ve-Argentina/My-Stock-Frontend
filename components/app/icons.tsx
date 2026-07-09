@@ -185,6 +185,16 @@ export function PinIcon(props: IconProps) {
   );
 }
 
+export function PdfIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6" />
+      <path d="M10 13v4M10 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM14 17v-4h1.5a1.5 1.5 0 0 1 0 3H14" />
+    </svg>
+  );
+}
+
 export function BuildingIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
