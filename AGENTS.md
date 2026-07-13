@@ -14,7 +14,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 > **Precedencia ante conflicto:** `CLAUDE.md` → este `AGENTS.md` → skills.
 >
-> **Skills:** `frontend-design`, `impeccable` y `design-taste-frontend` se usan **solo como checklist de calidad/anti-slop** (contraste, jerarquía, CTAs, layout, copy), nunca como fuente de stack/dependencias. La skill **`landing-generator` NO aplica** a este proyecto (es para landings con grilla de productos/servicios): ignorá su schema de `site.config`, sus "tipos de web" y su estructura de secciones.
+> **Skills:** `frontend-design`, `impeccable` y `design-taste-frontend` se usan **solo como checklist de calidad/anti-slop** (contraste, jerarquía, CTAs, layout, copy), nunca como fuente de stack/dependencias. La skill **`landing-generator` NO aplica** a este proyecto (es para landings con grilla de productos/servicios): ignorá su schema de `site.config`, sus "tipos de web" y su estructura de secciones. `mistock-brand` es la capa de **identidad propia** (paleta, sombra firma, tono de copy) — se aplica encima del checklist anti-slop cada vez que se toca UI visible; ver `BRAND_REFERENCE.md` para el análisis de origen (Root Square Academy).
 
 ## Regla #0 — Clean code, sin excepciones
 El clean code se prioriza **siempre**, por encima de la velocidad o la conveniencia:

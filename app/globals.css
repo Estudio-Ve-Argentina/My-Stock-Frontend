@@ -144,3 +144,11 @@ body {
   border: none;
   margin: 0;
 }
+
+.shadow-offset-brand {
+  box-shadow: -3px 4px 0 0 var(--brand-dark);
+}
+
+.shadow-offset-dark {
+  box-shadow: -3px 4px 0 0 var(--dark);
+}
