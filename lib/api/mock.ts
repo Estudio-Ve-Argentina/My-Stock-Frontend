@@ -115,15 +115,19 @@ export function mockCreateProduct(
     ...input,
     id: nextId,
     active: true,
+    pinned: false,
     user: "",
     createdAt: new Date().toISOString(),
     minStock,
     lowStock: minStock > 0 && input.stock <= minStock,
     categoryId: input.categoryId ?? null,
     categoryName,
+    supplierId: input.supplierId ?? null,
+    supplierName: null,
+    branchStocks: [],
   };
   writeStore(input.userId, [created, ...products]);
-  addMockMovement({ productName: input.name, type: "created", quantity: 0 });
+  addMockMovement({ productName: input.name, type: "created", quantity: 0, reason: null, branchName: null });
   return Promise.resolve(created);
 }
 
@@ -179,6 +183,8 @@ export function mockUpdateStock(
     productName: target.name,
     type: quantity > 0 ? "increased" : "decreased",
     quantity: Math.abs(quantity),
+    reason: null,
+    branchName: null,
   });
   return Promise.resolve(target);
 }
@@ -196,6 +202,8 @@ export function mockDeleteProduct(id: number): Promise<void> {
         productName: target.name,
         type: "deleted",
         quantity: 0,
+        reason: null,
+        branchName: null,
       });
     }
   }
@@ -226,12 +234,12 @@ function addMockMovement(partial: Omit<Movement, "id" | "at">): void {
 }
 
 const SAMPLE_MOVEMENTS: Movement[] = [
-  { id: 1, productName: "Café molido 500g", type: "increased", quantity: 12, at: hoursAgo(1) },
-  { id: 2, productName: "Yerba 1kg", type: "decreased", quantity: 3, at: hoursAgo(3) },
-  { id: 3, productName: "Azúcar 1kg", type: "created", quantity: 0, at: hoursAgo(5) },
-  { id: 4, productName: "Galletitas", type: "decreased", quantity: 6, at: hoursAgo(26) },
-  { id: 5, productName: "Té en saquitos", type: "deleted", quantity: 0, at: hoursAgo(28) },
-  { id: 6, productName: "Harina 000 1kg", type: "increased", quantity: 20, at: hoursAgo(30) },
+  { id: 1, productName: "Café molido 500g", type: "increased", quantity: 12, at: hoursAgo(1), reason: null, branchName: null },
+  { id: 2, productName: "Yerba 1kg", type: "decreased", quantity: 3, at: hoursAgo(3), reason: null, branchName: null },
+  { id: 3, productName: "Azúcar 1kg", type: "created", quantity: 0, at: hoursAgo(5), reason: null, branchName: null },
+  { id: 4, productName: "Galletitas", type: "decreased", quantity: 6, at: hoursAgo(26), reason: null, branchName: null },
+  { id: 5, productName: "Té en saquitos", type: "deleted", quantity: 0, at: hoursAgo(28), reason: null, branchName: null },
+  { id: 6, productName: "Harina 000 1kg", type: "increased", quantity: 20, at: hoursAgo(30), reason: null, branchName: null },
 ];
 
 export function mockListMovements(): Promise<Movement[]> {

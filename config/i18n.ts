@@ -786,4 +786,4 @@ export const ui = {
     privacy: { es: "Privacidad", en: "Privacy" },
     madeBy: { es: "Hecho por", en: "Made by" },
   },
-} satisfies Record<string, Record<string, Localized>>;
+} satisfies Record<string, Record<string, unknown>>;
