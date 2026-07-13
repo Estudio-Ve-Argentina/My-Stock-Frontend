@@ -6,6 +6,9 @@ type TranslateFn = (localized: Localized) => string;
 
 export function resolveErrorMessage(error: unknown, t: TranslateFn): string {
   if (!(error instanceof ApiError)) {
+    if (error instanceof Error) {
+      return error.message || t(ui.common.genericError);
+    }
     return t(ui.common.genericError);
   }
   switch (error.status) {
