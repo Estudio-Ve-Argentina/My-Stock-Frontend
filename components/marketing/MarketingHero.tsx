@@ -67,7 +67,7 @@ export function MarketingHero() {
           </motion.p>
 
           <motion.div variants={item} className="mt-8 flex flex-row gap-3">
-            <LinkButton href="/signup" variant="primary" size="md">
+            <LinkButton href="/signup" variant="featured" size="md">
               {t(hero.ctaPrimary)}
             </LinkButton>
             <LinkButton href="/login" variant="outline" size="md">

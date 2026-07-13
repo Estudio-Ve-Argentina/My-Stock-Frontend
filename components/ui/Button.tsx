@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 
-type ButtonVariant = "primary" | "soft" | "accent" | "outline" | "ghost" | "danger";
+type ButtonVariant = "primary" | "featured" | "soft" | "accent" | "outline" | "ghost" | "danger";
 type ButtonSize = "md" | "sm";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-brand-dark",
-  soft: "bg-brand-soft text-brand-dark hover:bg-brand-soft/70",
-  accent: "bg-accent text-white shadow-sm shadow-accent/20 hover:brightness-105",
-  outline: "border border-border bg-surface text-foreground hover:bg-muted",
-  ghost: "text-subtle hover:bg-muted hover:text-foreground",
-  danger: "bg-danger text-white shadow-sm shadow-danger/20 hover:bg-danger/90",
+    "bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-brand-dark active:scale-95",
+  featured:
+    "bg-primary text-primary-foreground shadow-offset-brand hover:-translate-x-px hover:translate-y-px hover:bg-brand-dark active:translate-x-[-3px] active:translate-y-[4px] active:shadow-none",
+  soft: "bg-brand-soft text-brand-dark hover:bg-brand-soft/70 active:scale-95",
+  accent: "bg-accent text-white shadow-sm shadow-accent/20 hover:brightness-105 active:scale-95",
+  outline: "border border-border bg-surface text-foreground hover:bg-muted active:scale-95",
+  ghost: "text-subtle hover:bg-muted hover:text-foreground active:scale-95",
+  danger: "bg-danger text-white shadow-sm shadow-danger/20 hover:bg-danger/90 active:scale-95",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -26,7 +28,7 @@ function classesFor(
   className: string,
 ): string {
   return [
-    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
     variantClasses[variant],
     sizeClasses[size],
     fullWidth ? "w-full" : "",

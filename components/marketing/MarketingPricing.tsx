@@ -14,7 +14,7 @@ export function MarketingPricing() {
   const { pricing } = marketing;
 
   return (
-    <section id="pricing" className="relative scroll-mt-16 bg-background">
+    <section id="pricing" className="relative scroll-mt-16 bg-brand-tint/45">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-dark-2 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-dark-2/50 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-dark-2/20 to-transparent" />
