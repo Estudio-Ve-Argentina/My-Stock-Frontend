@@ -4,12 +4,12 @@ export type Locale = (typeof LOCALES)[number];
 
 export type Localized<T = string> = Record<Locale, T>;
 
-export type PlanId = "free" | "pro-monthly" | "pro-annual";
+export type PlanId = "free" | "pro-monthly" | "pro-annual" | "pro-test";
 
 export interface Plan {
   id: PlanId;
   name: Localized;
-  priceUsd: number;
+  price: number;
   productLimit: number;
   durationDays: number;
   features: Localized<string[]>;
@@ -23,6 +23,8 @@ export interface AuthResponse {
   status: boolean;
 }
 
+export type SubscriptionStatus = "PENDING" | "AUTHORIZED" | "PAUSED";
+
 export interface UserMeResponse {
   id: number;
   name: string;
@@ -33,6 +35,7 @@ export interface UserMeResponse {
   roles: string[];
   emailVerified: boolean;
   hasPassword: boolean;
+  subscriptionStatus: SubscriptionStatus | null;
 }
 
 export interface UserDetailResponse {
@@ -40,8 +43,20 @@ export interface UserDetailResponse {
   lastName: string;
   username: string;
   planName: string;
-  planExpiresAt: string | null;
-  autoRenew: boolean;
+  subscriptionStatus: SubscriptionStatus | null;
+}
+
+export interface SubscriptionResponse {
+  subscriptionId: number;
+  status: SubscriptionStatus;
+  planName: string;
+  nextPaymentDate: string;
+}
+
+export interface SubscribeResponse {
+  subscriptionId: number;
+  initPoint: string;
+  status: string;
 }
 
 export interface BranchStock {

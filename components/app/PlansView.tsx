@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { appConfig, configIdFromBackend, backendIdFromConfig } from "@/config/app.config";
-import type { PlanId } from "@/config/site.types";
+import { useCallback, useEffect, useState } from "react";
+import { appConfig, configIdFromBackend, backendPlanName, formatPrice } from "@/config/app.config";
+import type { PlanId, SubscriptionResponse } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
-import { changePlan, cancelPlanRenewal } from "@/lib/api/user";
+import { subscribe, getSubscription, cancelSubscription } from "@/lib/api/subscriptions";
 import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/Button";
 import { PlansComparisonTable } from "@/components/ui/PlansComparisonTable";
+import { Spinner } from "@/components/ui/Spinner";
 
 function formatDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleDateString(locale === "es" ? "es-AR" : "en-US", {
@@ -19,52 +20,83 @@ function formatDate(iso: string, locale: string): string {
   });
 }
 
+function SubscriptionBadge({ status }: { status: string }) {
+  const { t } = useLanguage();
+
+  if (status === "AUTHORIZED") {
+    return (
+      <span className="rounded-full bg-brand/15 px-2.5 py-0.5 text-xs font-semibold text-brand-dark">
+        {t(ui.plans.subscriptionActive)}
+      </span>
+    );
+  }
+  if (status === "PENDING") {
+    return (
+      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+        {t(ui.plans.subscriptionPending)}
+      </span>
+    );
+  }
+  if (status === "PAUSED") {
+    return (
+      <span className="rounded-full bg-danger/15 px-2.5 py-0.5 text-xs font-semibold text-danger">
+        {t(ui.plans.subscriptionPaused)}
+      </span>
+    );
+  }
+  return null;
+}
+
 export function PlansView() {
   const { t, locale } = useLanguage();
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionResponse | null>(null);
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const currentPlanId = configIdFromBackend(user?.planName ?? "FREE");
   const currentPlan = appConfig.plans.find((p) => p.id === currentPlanId) ?? appConfig.plans[0];
   const isFree = currentPlanId === "free";
   const isPro = currentPlanId === "pro-monthly" || currentPlanId === "pro-annual";
+  const subscriptionStatus = user?.subscriptionStatus ?? null;
 
-  async function handleChangePlan(targetPlanId: PlanId) {
-    if (!user?.userId || targetPlanId === currentPlanId) {
-      setFeedback(t(ui.plans.alreadyOnPlan));
-      return;
-    }
+  const loadSubscription = useCallback(() => {
+    getSubscription()
+      .then(setSubscription)
+      .catch(() => {})
+      .finally(() => setSubscriptionLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    loadSubscription();
+  }, [loadSubscription]);
+
+  async function handleSubscribe(targetPlanId: PlanId) {
     setLoading(true);
     setFeedback(null);
     setPlanError(null);
     try {
-      await changePlan(user.userId, backendIdFromConfig(targetPlanId));
-      refreshUser();
-      if (targetPlanId === "free") {
-        setFeedback(t(ui.plans.downgradeSuccess));
-      } else if (currentPlanId === "free") {
-        setFeedback(t(ui.plans.upgradeSuccess));
-      } else {
-        setFeedback(t(ui.plans.planChanged));
-      }
+      const result = await subscribe(backendPlanName(targetPlanId));
+      window.location.href = result.initPoint;
     } catch (caught) {
       setPlanError(resolveErrorMessage(caught, t));
-    } finally {
       setLoading(false);
     }
   }
 
-  async function handleCancelRenewal() {
-    if (!user?.userId) return;
+  async function handleCancel() {
     setLoading(true);
     setFeedback(null);
     setPlanError(null);
+    setConfirmCancel(false);
     try {
-      await cancelPlanRenewal(user.userId);
+      await cancelSubscription();
       refreshUser();
-      setFeedback(t(ui.plans.cancelSuccess));
+      setSubscription(null);
+      setFeedback(t(ui.plans.subscriptionCancelled));
     } catch (caught) {
       setPlanError(resolveErrorMessage(caught, t));
     } finally {
@@ -73,7 +105,7 @@ export function PlansView() {
   }
 
   const periodLabel =
-    currentPlan.priceUsd === 0
+    currentPlan.price === 0
       ? ""
       : currentPlan.durationDays === 365
         ? ` ${t(ui.plans.perYear)}`
@@ -93,13 +125,16 @@ export function PlansView() {
           {t(ui.plans.yourPlan)}
         </h2>
         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-5 py-4 shadow-[0_8px_30px_-8px_rgba(22,163,74,0.12)]">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-0.5">
-              <span className="font-heading text-base font-bold text-foreground">
-                {t(currentPlan.name)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-heading text-base font-bold text-foreground">
+                  {t(currentPlan.name)}
+                </span>
+                {subscriptionStatus && <SubscriptionBadge status={subscriptionStatus} />}
+              </div>
               <span className="text-sm text-subtle">
-                ${currentPlan.priceUsd}{periodLabel}
+                {formatPrice(currentPlan.price)}{periodLabel}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -108,74 +143,114 @@ export function PlansView() {
                   <Button
                     variant="primary"
                     disabled={loading}
-                    onClick={() => handleChangePlan("pro-monthly")}
+                    onClick={() => handleSubscribe("pro-monthly")}
                   >
-                    {t(ui.plans.upgrade)} — $6{t(ui.plans.perMonth)}
+                    {loading
+                      ? t(ui.plans.subscribing)
+                      : `${t(ui.plans.upgrade)} — ${formatPrice(6499)}${t(ui.plans.perMonth)}`}
                   </Button>
                   <Button
                     variant="outline"
                     disabled={loading}
-                    onClick={() => handleChangePlan("pro-annual")}
+                    onClick={() => handleSubscribe("pro-annual")}
                   >
-                    {t(ui.plans.upgrade)} — $48{t(ui.plans.perYear)}
+                    {`${t(ui.plans.upgrade)} — ${formatPrice(50000)}${t(ui.plans.perYear)}`}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={loading}
+                    onClick={() => handleSubscribe("pro-test")}
+                    className="text-xs text-subtle"
+                  >
+                    Test $1
                   </Button>
                 </>
               )}
-              {currentPlanId === "pro-monthly" && (
+              {subscriptionStatus === "PENDING" && (
                 <Button
                   variant="primary"
                   disabled={loading}
-                  onClick={() => handleChangePlan("pro-annual")}
+                  onClick={() => handleSubscribe(currentPlanId)}
                 >
-                  {t(ui.plans.switchToAnnual)}
+                  {loading ? t(ui.plans.subscribing) : t(ui.plans.goToPay)}
                 </Button>
               )}
-              {currentPlanId === "pro-annual" && (
-                <Button
-                  variant="outline"
-                  disabled={loading}
-                  onClick={() => handleChangePlan("pro-monthly")}
-                >
-                  {t(ui.plans.switchToMonthly)}
-                </Button>
+              {isPro && subscriptionStatus === "AUTHORIZED" && (
+                <>
+                  {currentPlanId === "pro-monthly" && (
+                    <Button
+                      variant="primary"
+                      disabled={loading}
+                      onClick={() => handleSubscribe("pro-annual")}
+                    >
+                      {loading ? t(ui.plans.subscribing) : t(ui.plans.switchToAnnual)}
+                    </Button>
+                  )}
+                  {currentPlanId === "pro-annual" && (
+                    <Button
+                      variant="outline"
+                      disabled={loading}
+                      onClick={() => handleSubscribe("pro-monthly")}
+                    >
+                      {loading ? t(ui.plans.subscribing) : t(ui.plans.switchToMonthly)}
+                    </Button>
+                  )}
+                </>
               )}
-              {isPro && (
+              {isPro && (subscriptionStatus === "AUTHORIZED" || subscriptionStatus === "PAUSED") && (
                 <Button
                   variant="ghost"
                   disabled={loading}
-                  onClick={() => handleChangePlan("free")}
+                  onClick={() => setConfirmCancel(true)}
                   className="text-subtle hover:text-danger"
                 >
-                  {t(ui.plans.downgrade)}
+                  {t(ui.plans.cancelSubscription)}
                 </Button>
               )}
             </div>
           </div>
 
-          {isPro && (
-            <div className="flex flex-col gap-2 border-t border-border pt-3">
-              <p className="text-sm text-subtle">
-                {t(ui.plans.expires)}{": "}
-                {user?.planExpiresAt
-                  ? formatDate(user.planExpiresAt, locale)
-                  : t(ui.plans.neverExpires)}
+          {confirmCancel && (
+            <div className="flex flex-col gap-3 rounded-xl border border-danger/20 bg-danger/5 p-4">
+              <p className="text-sm font-medium text-danger">
+                {t(ui.plans.cancelSubscriptionConfirm)}
               </p>
-              <p className="text-sm text-subtle">
-                {user?.autoRenew
-                  ? t(ui.plans.renewalActive)
-                  : t(ui.plans.renewalCancelled)}
-              </p>
-              {user?.autoRenew && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={loading}
+                  onClick={handleCancel}
+                  className="!bg-danger hover:!bg-danger/85"
+                >
+                  {loading ? <Spinner /> : t(ui.plans.cancelSubscription)}
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  disabled={loading}
-                  onClick={handleCancelRenewal}
-                  className="self-start text-subtle hover:text-danger"
+                  onClick={() => setConfirmCancel(false)}
                 >
-                  {t(ui.plans.cancelRenewal)}
+                  {t(ui.common.cancel)}
                 </Button>
-              )}
+              </div>
+            </div>
+          )}
+
+          {subscriptionLoaded && subscription?.nextPaymentDate && subscriptionStatus === "AUTHORIZED" && (
+            <div className="border-t border-border pt-3">
+              <p className="text-sm text-subtle">
+                {t(ui.plans.nextPayment)}{": "}
+                {formatDate(subscription.nextPaymentDate, locale)}
+              </p>
+            </div>
+          )}
+
+          {subscriptionStatus === "PAUSED" && (
+            <div className="border-t border-border pt-3">
+              <p className="text-sm text-amber-700">
+                {t(ui.plans.subscriptionPaused)}
+              </p>
             </div>
           )}
 

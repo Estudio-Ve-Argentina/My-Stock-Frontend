@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { appConfig, configIdFromBackend } from "@/config/app.config";
+import type { SubscriptionStatus } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,12 +16,10 @@ import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
 import { LogoutIcon, CheckIcon } from "./icons";
 
-function formatDate(iso: string, locale: string): string {
-  return new Date(iso).toLocaleDateString(locale === "es" ? "es-AR" : "en-US", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+function subscriptionLabel(status: SubscriptionStatus, t: (v: { es: string; en: string }) => string): string {
+  if (status === "AUTHORIZED") return t(ui.plans.subscriptionActive);
+  if (status === "PENDING") return t(ui.plans.subscriptionPending);
+  return t(ui.plans.subscriptionPaused);
 }
 
 function ProfileSection() {
@@ -213,7 +212,7 @@ function EmailVerificationSection() {
 }
 
 export function AccountView() {
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
   const { user, signOut } = useAuth();
   const { products } = useProducts(user?.username);
 
@@ -285,14 +284,9 @@ export function AccountView() {
           <p className="mt-1 font-heading text-2xl font-bold tracking-tight">
             {planLabel}
           </p>
-          {user?.planExpiresAt && (
+          {user?.subscriptionStatus && (
             <p className="mt-1 text-xs opacity-80">
-              {t(ui.plans.expires)}{": "}
-              {formatDate(user.planExpiresAt, locale)}
-              {" · "}
-              {user.autoRenew
-                ? t(ui.plans.renewalActive)
-                : t(ui.plans.renewalCancelled)}
+              {subscriptionLabel(user.subscriptionStatus, t)}
             </p>
           )}
           <LinkButton href="/mi-plan" variant="accent" size="sm" className="mt-4">

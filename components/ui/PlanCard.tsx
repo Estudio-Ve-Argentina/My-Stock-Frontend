@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Plan } from "@/config/site.types";
+import { formatPrice } from "@/config/app.config";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -19,7 +20,7 @@ export function PlanCard({ plan, current = false, action, index = 0 }: PlanCardP
   const isPro = plan.id !== "free";
   const isAnnual = plan.id === "pro-annual";
   const periodLabel =
-    plan.priceUsd === 0
+    plan.price === 0
       ? ""
       : plan.durationDays === 365
         ? ` ${t(ui.plans.perYear)}`
@@ -54,7 +55,7 @@ export function PlanCard({ plan, current = false, action, index = 0 }: PlanCardP
           )}
         </div>
         <p className="mt-1 font-heading text-2xl font-bold tracking-tight md:mt-2 md:text-4xl">
-          {plan.priceUsd === 0 ? "$0" : `$${plan.priceUsd}`}
+          {formatPrice(plan.price)}
           <span className="text-xs font-medium text-subtle md:text-base">{periodLabel}</span>
         </p>
       </div>

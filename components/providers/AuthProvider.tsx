@@ -10,9 +10,9 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import type { SubscriptionStatus } from "@/config/site.types";
 import { decodeJwt, isTokenValid } from "@/lib/auth/jwt";
 import { fetchMe, logout as apiLogout } from "@/lib/api/auth";
-import { getUserDetail } from "@/lib/api/user";
 import { isMockEnabled } from "@/lib/api/mock";
 import { registerSessionExpiredHandler } from "@/lib/api/client";
 import {
@@ -29,8 +29,7 @@ export interface SessionUser {
   roles: string[];
   planName: string;
   maxProducts: number | null;
-  planExpiresAt: string | null;
-  autoRenew: boolean;
+  subscriptionStatus: SubscriptionStatus | null;
   name: string;
   lastName: string;
   emailVerified: boolean;
@@ -65,8 +64,7 @@ function userFromToken(
     roles: claims?.roles ?? [],
     planName: "FREE",
     maxProducts: null,
-    planExpiresAt: null,
-    autoRenew: true,
+    subscriptionStatus: null,
     name: "",
     lastName: "",
     emailVerified: false,
@@ -92,22 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             roles: me.roles,
             planName: me.planName,
             maxProducts: me.maxProducts,
+            subscriptionStatus: me.subscriptionStatus,
             name: me.name,
             lastName: me.lastName,
             emailVerified: me.emailVerified,
             hasPassword: me.hasPassword,
-          };
-        });
-        return getUserDetail(me.id);
-      })
-      .then((detail) => {
-        if (!detail) return;
-        setUser((current) => {
-          if (current?.username !== baseUser.username) return current;
-          return {
-            ...current,
-            planExpiresAt: detail.planExpiresAt,
-            autoRenew: detail.autoRenew,
           };
         });
       })

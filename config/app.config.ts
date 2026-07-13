@@ -23,7 +23,7 @@ export const appConfig: AppConfig = {
     {
       id: "free",
       name: { es: "Gratis", en: "Free" },
-      priceUsd: 0,
+      price: 0,
       productLimit: 10,
       durationDays: 0,
       features: {
@@ -42,7 +42,7 @@ export const appConfig: AppConfig = {
     {
       id: "pro-monthly",
       name: { es: "Pro Mensual", en: "Pro Monthly" },
-      priceUsd: 6,
+      price: 6499,
       productLimit: 120,
       durationDays: 30,
       features: {
@@ -63,7 +63,7 @@ export const appConfig: AppConfig = {
     {
       id: "pro-annual",
       name: { es: "Pro Anual", en: "Pro Annual" },
-      priceUsd: 48,
+      price: 50000,
       productLimit: 120,
       durationDays: 365,
       features: {
@@ -96,20 +96,27 @@ const BACKEND_PLAN_MAP: Record<string, PlanId> = {
   FREE: "free",
   PRO_MONTHLY: "pro-monthly",
   PRO_ANNUAL: "pro-annual",
+  PRO_TEST: "pro-test",
 };
 
-const CONFIG_TO_BACKEND_ID: Record<PlanId, number> = {
-  free: 1,
-  "pro-monthly": 2,
-  "pro-annual": 3,
+const CONFIG_TO_BACKEND_NAME: Record<PlanId, string> = {
+  free: "FREE",
+  "pro-monthly": "PRO_MONTHLY",
+  "pro-annual": "PRO_ANNUAL",
+  "pro-test": "PRO_TEST",
 };
 
 export function configIdFromBackend(backendName: string): PlanId {
   return BACKEND_PLAN_MAP[backendName] ?? "free";
 }
 
-export function backendIdFromConfig(configId: PlanId): number {
-  return CONFIG_TO_BACKEND_ID[configId];
+export function backendPlanName(configId: PlanId): string {
+  return CONFIG_TO_BACKEND_NAME[configId];
+}
+
+export function formatPrice(amount: number): string {
+  if (amount === 0) return "$0";
+  return "$" + amount.toLocaleString("es-AR", { maximumFractionDigits: 0 });
 }
 
 export const marketing = {

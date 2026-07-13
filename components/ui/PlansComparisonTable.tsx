@@ -1,6 +1,6 @@
 "use client";
 
-import { appConfig } from "@/config/app.config";
+import { appConfig, formatPrice } from "@/config/app.config";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { Localized } from "@/config/site.types";
@@ -121,7 +121,7 @@ export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTablePr
             </td>
             {appConfig.plans.map((plan) => {
               const period =
-                plan.priceUsd === 0
+                plan.price === 0
                   ? ""
                   : plan.durationDays === 365
                     ? ` ${t(ui.plans.perYear)}`
@@ -134,7 +134,7 @@ export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTablePr
                   }`}
                 >
                   <span className="font-heading text-lg font-bold text-foreground">
-                    {plan.priceUsd === 0 ? "$0" : `$${plan.priceUsd}`}
+                    {formatPrice(plan.price)}
                   </span>
                   <span className="text-xs text-subtle">{period}</span>
                 </td>

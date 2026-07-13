@@ -285,6 +285,33 @@ export const ui = {
     cancelSuccess: { es: "Renovación cancelada.", en: "Renewal cancelled." },
     alreadyOnPlan: { es: "Ya tenés este plan.", en: "You're already on this plan." },
     selectPlan: { es: "Elegí tu plan", en: "Choose your plan" },
+    subscribe: { es: "Suscribirse", en: "Subscribe" },
+    subscribing: { es: "Redirigiendo a Mercado Pago…", en: "Redirecting to Mercado Pago…" },
+    cancelSubscription: { es: "Cancelar suscripción", en: "Cancel subscription" },
+    cancelSubscriptionConfirm: {
+      es: "¿Cancelar tu suscripción? Vas a volver al plan Gratis de forma inmediata.",
+      en: "Cancel your subscription? You'll switch to the Free plan immediately.",
+    },
+    subscriptionActive: { es: "Suscripción activa", en: "Active subscription" },
+    subscriptionPending: {
+      es: "Completá tu suscripción",
+      en: "Complete your subscription",
+    },
+    subscriptionPaused: {
+      es: "Hay un problema con tu medio de pago",
+      en: "There's an issue with your payment method",
+    },
+    nextPayment: { es: "Próximo cobro", en: "Next payment" },
+    goToPay: { es: "Ir a pagar", en: "Go to pay" },
+    subscriptionCancelled: { es: "Suscripción cancelada.", en: "Subscription cancelled." },
+    subscribeError: {
+      es: "No se pudo crear la suscripción. Intentá de nuevo.",
+      en: "Could not create the subscription. Try again.",
+    },
+    cancelError: {
+      es: "No se pudo cancelar la suscripción. Intentá de nuevo.",
+      en: "Could not cancel the subscription. Try again.",
+    },
   },
   onboarding: {
     profileTitle: { es: "Contanos sobre vos", en: "Tell us about you" },
@@ -584,8 +611,8 @@ export const ui = {
           en: "Does the Pro plan renew automatically?",
         },
         answer: {
-          es: "Sí, los planes Pro se renuevan automáticamente (cada 30 días el mensual, cada 365 el anual). Si preferís no renovar, podés cancelar la renovación desde la sección de planes. Tu plan sigue activo hasta que venza, y después volvés al plan gratuito. Si tenés más de 10 productos activos, los más antiguos se congelan automáticamente.",
-          en: "Yes, Pro plans renew automatically (every 30 days for monthly, every 365 for annual). If you prefer not to renew, you can cancel the renewal from the plans section. Your plan stays active until it expires, then you switch back to the free plan. If you have more than 10 active products, the oldest ones are automatically frozen.",
+          es: "Sí, los planes Pro se renuevan automáticamente a través de Mercado Pago (cada mes el mensual, cada año el anual). Si preferís cancelar, podés hacerlo desde la sección de planes y volvés al plan gratuito de forma inmediata. Si tenés más de 10 productos activos, los más antiguos se congelan automáticamente.",
+          en: "Yes, Pro plans renew automatically through Mercado Pago (monthly or annually). If you prefer to cancel, you can do so from the plans section and you'll switch back to the free plan immediately. If you have more than 10 active products, the oldest ones are automatically frozen.",
         },
       },
       {
@@ -625,8 +652,8 @@ export const ui = {
       {
         heading: { es: "3. Planes, precios y facturación", en: "3. Plans, pricing and billing" },
         body: {
-          es: "My-Stock ofrece un plan gratuito con funcionalidades limitadas y planes pagos con funcionalidades extendidas. El plan gratuito no tiene costo ni fecha de expiración. Los planes pagos se facturan de forma mensual o anual según la opción elegida. Los precios están expresados en dólares estadounidenses (USD) y pueden estar sujetos a impuestos según tu jurisdicción. Nos reservamos el derecho de modificar los precios con un aviso previo de al menos 30 días. Los cambios de precio no afectarán el período de facturación en curso. Al realizar el upgrade, el cambio se aplica de forma inmediata. Al hacer downgrade, mantenés el acceso al plan actual hasta el final del período facturado.",
-          en: "My-Stock offers a free plan with limited features and paid plans with extended features. The free plan has no cost or expiration date. Paid plans are billed monthly or annually depending on the chosen option. Prices are expressed in US dollars (USD) and may be subject to taxes depending on your jurisdiction. We reserve the right to modify prices with at least 30 days prior notice. Price changes will not affect the current billing period. When upgrading, the change takes effect immediately. When downgrading, you maintain access to the current plan until the end of the billed period.",
+          es: "My-Stock ofrece un plan gratuito con funcionalidades limitadas y planes pagos con funcionalidades extendidas. El plan gratuito no tiene costo ni fecha de expiración. Los planes pagos se facturan de forma mensual o anual según la opción elegida a través de Mercado Pago. Los precios están expresados en pesos argentinos (ARS) y pueden estar sujetos a impuestos según tu jurisdicción. Nos reservamos el derecho de modificar los precios con un aviso previo de al menos 30 días. Los cambios de precio no afectarán el período de facturación en curso. Al cancelar la suscripción, el cambio a plan gratuito se aplica de forma inmediata.",
+          en: "My-Stock offers a free plan with limited features and paid plans with extended features. The free plan has no cost or expiration date. Paid plans are billed monthly or annually depending on the chosen option through Mercado Pago. Prices are expressed in Argentine pesos (ARS) and may be subject to taxes depending on your jurisdiction. We reserve the right to modify prices with at least 30 days prior notice. Price changes will not affect the current billing period. When cancelling a subscription, the switch to the free plan takes effect immediately.",
         },
       },
       {

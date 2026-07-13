@@ -4,13 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ui } from "@/config/i18n";
-import { appConfig } from "@/config/app.config";
-import { backendIdFromConfig } from "@/config/app.config";
+import { appConfig, backendPlanName } from "@/config/app.config";
 import type { PlanId } from "@/config/site.types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { updateProfile } from "@/lib/api/user";
-import { changePlan } from "@/lib/api/user";
+import { subscribe } from "@/lib/api/subscriptions";
 import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
@@ -69,8 +68,10 @@ export function OnboardingView() {
     setError(null);
     try {
       if (selectedPlan !== "free") {
-        await changePlan(user.userId, backendIdFromConfig(selectedPlan));
-        refreshUser();
+        localStorage.setItem(ONBOARDED_KEY, "1");
+        const result = await subscribe(backendPlanName(selectedPlan));
+        window.location.href = result.initPoint;
+        return;
       }
       setStep(2);
     } catch (caught) {
@@ -78,7 +79,7 @@ export function OnboardingView() {
     } finally {
       setSaving(false);
     }
-  }, [selectedPlan, user?.userId, refreshUser, t]);
+  }, [selectedPlan, user?.userId, t]);
 
   const handleFinish = useCallback(() => {
     localStorage.setItem(ONBOARDED_KEY, "1");
