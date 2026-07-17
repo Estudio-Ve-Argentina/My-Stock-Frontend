@@ -4,7 +4,7 @@ import { MarketingContact } from "@/components/marketing/MarketingContact";
 export const metadata: Metadata = {
   title: "Contacto",
   description:
-    "Contactá al equipo de My-Stock. Estamos para ayudarte con tu inventario.",
+    "Contactá al equipo de Stockeo. Estamos para ayudarte con tu inventario.",
 };
 
 export default function ContactoPublicPage() {

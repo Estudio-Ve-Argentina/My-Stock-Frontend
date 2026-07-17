@@ -4,7 +4,7 @@ import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 
 export const metadata: Metadata = {
   title: "Restablecer contraseña",
-  description: "Establecé una nueva contraseña para tu cuenta de My-Stock.",
+  description: "Establecé una nueva contraseña para tu cuenta de Stockeo.",
   robots: { index: false },
 };
 

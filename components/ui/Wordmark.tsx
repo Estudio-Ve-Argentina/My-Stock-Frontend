@@ -5,9 +5,12 @@ interface WordmarkProps {
   href?: string;
   dark?: boolean;
   large?: boolean;
+  nameOverride?: string;
 }
 
-export function Wordmark({ href = "/", dark = false, large = false }: WordmarkProps) {
+export function Wordmark({ href = "/", dark = false, large = false, nameOverride }: WordmarkProps) {
+  const displayName = nameOverride ?? appConfig.name;
+
   return (
     <Link href={href} className="inline-flex items-center gap-2.5">
       <span
@@ -19,7 +22,7 @@ export function Wordmark({ href = "/", dark = false, large = false }: WordmarkPr
             : "bg-brand text-brand-foreground"
         }`}
       >
-        M
+        {displayName[0]}
       </span>
       <span
         className={`font-heading font-bold tracking-tight ${
@@ -28,7 +31,7 @@ export function Wordmark({ href = "/", dark = false, large = false }: WordmarkPr
           dark ? "text-dark-foreground" : "text-foreground"
         }`}
       >
-        {appConfig.name}
+        {displayName}
       </span>
     </Link>
   );

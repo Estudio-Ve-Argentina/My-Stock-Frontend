@@ -14,10 +14,16 @@ export default function robots(): MetadataRoute.Robots {
           "/categorias",
           "/mi-plan",
           "/cuenta",
+          "/proveedores",
+          "/sucursales",
+          "/favoritos",
+          "/informes",
+          "/forgot-password",
+          "/reset-password",
           "/oauth2/",
         ],
       },
     ],
-    sitemap: "https://mystock.estudiove.ar/sitemap.xml",
+    sitemap: "https://stockeo.app/sitemap.xml",
   };
 }

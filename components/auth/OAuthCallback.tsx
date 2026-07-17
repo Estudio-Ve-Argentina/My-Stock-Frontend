@@ -10,7 +10,7 @@ import { ApiError } from "@/lib/api/client";
 import { Spinner } from "@/components/ui/Spinner";
 import { LinkButton } from "@/components/ui/Button";
 
-const ONBOARDED_KEY = "mystock_onboarded";
+const ONBOARDED_KEY = "stockeo_onboarded";
 
 function looksLikeFallbackName(name: string, email: string): boolean {
   const emailPrefix = email.split("@")[0];

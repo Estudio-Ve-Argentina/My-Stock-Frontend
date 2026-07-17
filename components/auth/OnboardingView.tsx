@@ -17,7 +17,7 @@ import { PlanCard } from "@/components/ui/PlanCard";
 import { Spinner } from "@/components/ui/Spinner";
 import { PlusIcon, PinIcon, SparkIcon } from "@/components/app/icons";
 
-const ONBOARDED_KEY = "mystock_onboarded";
+const ONBOARDED_KEY = "stockeo_onboarded";
 
 const stepVariants = {
   enter: { opacity: 0, x: 40 },

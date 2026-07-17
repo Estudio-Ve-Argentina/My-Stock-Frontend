@@ -1,5 +1,5 @@
-export const TOKEN_COOKIE = "mystock_token";
-export const REFRESH_COOKIE = "mystock_refresh";
+export const TOKEN_COOKIE = "stockeo_token";
+export const REFRESH_COOKIE = "stockeo_refresh";
 
 const ACCESS_MAX_AGE = 30 * 60;
 const REFRESH_MAX_AGE = 7 * 24 * 60 * 60;

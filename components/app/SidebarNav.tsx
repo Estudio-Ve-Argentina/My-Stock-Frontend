@@ -102,10 +102,10 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
       <div className="flex items-center justify-between px-1 pt-2">
         <Link href="/panel" onClick={onNavigate} className="inline-flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-neon text-base font-bold text-dark shadow-[0_6px_18px_-4px_rgba(52,240,138,0.9)]">
-            M
+            S
           </span>
           <span className="font-heading text-lg font-bold tracking-tight text-dark-foreground">
-            My-Stock
+            Stockeo
           </span>
         </Link>
         <LanguageToggle />

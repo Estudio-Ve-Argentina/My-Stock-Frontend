@@ -58,7 +58,7 @@ export function mockSignup(input: SignupInput): Promise<AuthResponse> {
   return Promise.resolve(authResponse(input.email));
 }
 
-const STORE_PREFIX = "mystock_mock_products_";
+const STORE_PREFIX = "stockeo_mock_products_";
 
 function storeKey(userId: number): string {
   return `${STORE_PREFIX}${userId}`;
@@ -214,7 +214,7 @@ function hoursAgo(hours: number): string {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 }
 
-const MOVEMENTS_KEY = "mystock_mock_movements";
+const MOVEMENTS_KEY = "stockeo_mock_movements";
 
 function readMovements(): Movement[] {
   if (typeof window === "undefined") return [];
@@ -247,7 +247,7 @@ export function mockListMovements(): Promise<Movement[]> {
   return Promise.resolve([...stored, ...SAMPLE_MOVEMENTS]);
 }
 
-const MOCK_CATEGORIES_KEY = "mystock_mock_categories";
+const MOCK_CATEGORIES_KEY = "stockeo_mock_categories";
 
 function readMockCategories(): CategoryResponse[] {
   if (typeof window === "undefined") return [];

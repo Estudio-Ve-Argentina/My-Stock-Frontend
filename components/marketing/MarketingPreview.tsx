@@ -59,7 +59,7 @@ export function MarketingPreview() {
             <span className="h-2.5 w-2.5 rounded-full bg-danger/50" />
             <span className="h-2.5 w-2.5 rounded-full bg-accent/60" />
             <span className="h-2.5 w-2.5 rounded-full bg-brand/60" />
-            <span className="ml-2 text-xs font-medium text-subtle">My-Stock · {t(ui.nav.panel)}</span>
+            <span className="ml-2 text-xs font-medium text-subtle">Stockeo · {t(ui.nav.panel)}</span>
           </div>
 
           <div className="grid grid-cols-[auto_1fr] gap-0">

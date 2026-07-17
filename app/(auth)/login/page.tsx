@@ -5,7 +5,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 export const metadata: Metadata = {
   title: "Iniciar sesión",
   description:
-    "Ingresá a tu cuenta de My-Stock para controlar el inventario de tu negocio.",
+    "Ingresá a tu cuenta de Stockeo para controlar el inventario de tu negocio.",
 };
 
 export default function LoginPage() {

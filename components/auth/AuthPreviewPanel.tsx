@@ -47,7 +47,7 @@ export function AuthPreviewPanel() {
 
           <div className="flex items-center justify-between border-b border-dark-border px-4 py-3">
             <span className="text-xs font-semibold text-dark-subtle">
-              My-Stock · {t(ui.nav.panel)}
+              Stockeo · {t(ui.nav.panel)}
             </span>
             <span className="h-2 w-2 animate-pulse rounded-full bg-neon shadow-[0_0_8px_2px_rgba(52,240,138,0.5)]" />
           </div>

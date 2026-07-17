@@ -549,7 +549,7 @@ export const ui = {
     },
     items: [
       {
-        question: { es: "¿My-Stock es gratis?", en: "Is My-Stock free?" },
+        question: { es: "¿Stockeo es gratis?", en: "Is Stockeo free?" },
         answer: {
           es: "Sí. El plan gratuito te permite cargar hasta 10 productos sin límite de tiempo. No necesitás tarjeta de crédito para empezar. Cuando tu negocio crezca y necesites más capacidad, podés pasar a un plan Pro (mensual o anual) en cualquier momento desde la sección de planes.",
           en: "Yes. The free plan lets you add up to 10 products with no time limit. No credit card required to get started. When your business grows and you need more capacity, you can upgrade to a Pro plan (monthly or annual) at any time from the plans section.",
@@ -577,8 +577,8 @@ export const ui = {
       },
       {
         question: {
-          es: "¿Puedo usar My-Stock desde el celular?",
-          en: "Can I use My-Stock on my phone?",
+          es: "¿Puedo usar Stockeo desde el celular?",
+          en: "Can I use Stockeo on my phone?",
         },
         answer: {
           es: "Sí, la app está diseñada con enfoque mobile-first para funcionar perfecto en cualquier dispositivo: celular, tablet o computadora. La interfaz se adapta automáticamente al tamaño de tu pantalla, así podés cargar productos o ajustar stock desde el mostrador de tu negocio sin necesitar una computadora.",
@@ -601,8 +601,8 @@ export const ui = {
           en: "Do I need to install anything?",
         },
         answer: {
-          es: "No. My-Stock funciona directamente desde el navegador, sin descargas ni instalaciones. Podés acceder desde Chrome, Firefox, Safari o cualquier navegador moderno. Solo necesitás una conexión a internet y tu usuario y contraseña.",
-          en: "No. My-Stock works directly from your browser, no downloads or installations needed. You can access it from Chrome, Firefox, Safari or any modern browser. All you need is an internet connection and your username and password.",
+          es: "No. Stockeo funciona directamente desde el navegador, sin descargas ni instalaciones. Podés acceder desde Chrome, Firefox, Safari o cualquier navegador moderno. Solo necesitás una conexión a internet y tu usuario y contraseña.",
+          en: "No. Stockeo works directly from your browser, no downloads or installations needed. You can access it from Chrome, Firefox, Safari or any modern browser. All you need is an internet connection and your username and password.",
         },
       },
       {
@@ -631,15 +631,15 @@ export const ui = {
     title: { es: "Términos y condiciones", en: "Terms & conditions" },
     lastUpdated: { es: "Última actualización", en: "Last updated" },
     intro: {
-      es: "Al acceder y utilizar My-Stock (en adelante, \"el Servicio\"), aceptás los siguientes términos y condiciones. Si no estás de acuerdo con alguno de estos puntos, te pedimos que no utilices la plataforma. Estos términos constituyen un acuerdo legal entre vos (\"el Usuario\") y My-Stock (\"nosotros\").",
-      en: "By accessing and using My-Stock (hereinafter, \"the Service\"), you agree to the following terms and conditions. If you do not agree with any of these points, please do not use the platform. These terms constitute a legal agreement between you (\"the User\") and My-Stock (\"we\" or \"us\").",
+      es: "Al acceder y utilizar Stockeo (en adelante, \"el Servicio\"), aceptás los siguientes términos y condiciones. Si no estás de acuerdo con alguno de estos puntos, te pedimos que no utilices la plataforma. Estos términos constituyen un acuerdo legal entre vos (\"el Usuario\") y Stockeo (\"nosotros\").",
+      en: "By accessing and using Stockeo (hereinafter, \"the Service\"), you agree to the following terms and conditions. If you do not agree with any of these points, please do not use the platform. These terms constitute a legal agreement between you (\"the User\") and Stockeo (\"we\" or \"us\").",
     },
     sections: [
       {
         heading: { es: "1. Descripción del servicio", en: "1. Service description" },
         body: {
-          es: "My-Stock es una plataforma web de gestión de inventario diseñada para pequeños y medianos negocios. El Servicio permite registrar productos, controlar cantidades de stock en tiempo real, visualizar el historial de movimientos y gestionar la cuenta del usuario. El Servicio se proporciona a través de navegadores web y no requiere la instalación de software adicional. Nos reservamos el derecho de modificar, suspender o discontinuar cualquier funcionalidad del Servicio en cualquier momento, con o sin previo aviso.",
-          en: "My-Stock is a web-based inventory management platform designed for small and medium businesses. The Service allows you to register products, control stock quantities in real time, view movement history and manage your user account. The Service is provided through web browsers and does not require the installation of additional software. We reserve the right to modify, suspend or discontinue any functionality of the Service at any time, with or without prior notice.",
+          es: "Stockeo es una plataforma web de gestión de inventario diseñada para pequeños y medianos negocios. El Servicio permite registrar productos, controlar cantidades de stock en tiempo real, visualizar el historial de movimientos y gestionar la cuenta del usuario. El Servicio se proporciona a través de navegadores web y no requiere la instalación de software adicional. Nos reservamos el derecho de modificar, suspender o discontinuar cualquier funcionalidad del Servicio en cualquier momento, con o sin previo aviso.",
+          en: "Stockeo is a web-based inventory management platform designed for small and medium businesses. The Service allows you to register products, control stock quantities in real time, view movement history and manage your user account. The Service is provided through web browsers and does not require the installation of additional software. We reserve the right to modify, suspend or discontinue any functionality of the Service at any time, with or without prior notice.",
         },
       },
       {
@@ -652,8 +652,8 @@ export const ui = {
       {
         heading: { es: "3. Planes, precios y facturación", en: "3. Plans, pricing and billing" },
         body: {
-          es: "My-Stock ofrece un plan gratuito con funcionalidades limitadas y planes pagos con funcionalidades extendidas. El plan gratuito no tiene costo ni fecha de expiración. Los planes pagos se facturan de forma mensual o anual según la opción elegida a través de Mercado Pago. Los precios están expresados en pesos argentinos (ARS) y pueden estar sujetos a impuestos según tu jurisdicción. Nos reservamos el derecho de modificar los precios con un aviso previo de al menos 30 días. Los cambios de precio no afectarán el período de facturación en curso. Al cancelar la suscripción, el cambio a plan gratuito se aplica de forma inmediata.",
-          en: "My-Stock offers a free plan with limited features and paid plans with extended features. The free plan has no cost or expiration date. Paid plans are billed monthly or annually depending on the chosen option through Mercado Pago. Prices are expressed in Argentine pesos (ARS) and may be subject to taxes depending on your jurisdiction. We reserve the right to modify prices with at least 30 days prior notice. Price changes will not affect the current billing period. When cancelling a subscription, the switch to the free plan takes effect immediately.",
+          es: "Stockeo ofrece un plan gratuito con funcionalidades limitadas y planes pagos con funcionalidades extendidas. El plan gratuito no tiene costo ni fecha de expiración. Los planes pagos se facturan de forma mensual o anual según la opción elegida a través de Mercado Pago. Los precios están expresados en pesos argentinos (ARS) y pueden estar sujetos a impuestos según tu jurisdicción. Nos reservamos el derecho de modificar los precios con un aviso previo de al menos 30 días. Los cambios de precio no afectarán el período de facturación en curso. Al cancelar la suscripción, el cambio a plan gratuito se aplica de forma inmediata.",
+          en: "Stockeo offers a free plan with limited features and paid plans with extended features. The free plan has no cost or expiration date. Paid plans are billed monthly or annually depending on the chosen option through Mercado Pago. Prices are expressed in Argentine pesos (ARS) and may be subject to taxes depending on your jurisdiction. We reserve the right to modify prices with at least 30 days prior notice. Price changes will not affect the current billing period. When cancelling a subscription, the switch to the free plan takes effect immediately.",
         },
       },
       {
@@ -666,8 +666,8 @@ export const ui = {
       {
         heading: { es: "5. Propiedad intelectual", en: "5. Intellectual property" },
         body: {
-          es: "Todo el contenido del Servicio, incluyendo pero no limitado a diseño, código, textos, gráficos, logotipos e interfaz de usuario, es propiedad de My-Stock y está protegido por las leyes de propiedad intelectual aplicables. Los datos de inventario que cargues en la plataforma son de tu propiedad. My-Stock no reclama ningún derecho sobre tus datos y solo los utiliza para brindarte el Servicio.",
-          en: "All content of the Service, including but not limited to design, code, text, graphics, logos and user interface, is the property of My-Stock and is protected by applicable intellectual property laws. The inventory data you upload to the platform is your property. My-Stock does not claim any rights over your data and only uses it to provide you with the Service.",
+          es: "Todo el contenido del Servicio, incluyendo pero no limitado a diseño, código, textos, gráficos, logotipos e interfaz de usuario, es propiedad de Stockeo y está protegido por las leyes de propiedad intelectual aplicables. Los datos de inventario que cargues en la plataforma son de tu propiedad. Stockeo no reclama ningún derecho sobre tus datos y solo los utiliza para brindarte el Servicio.",
+          en: "All content of the Service, including but not limited to design, code, text, graphics, logos and user interface, is the property of Stockeo and is protected by applicable intellectual property laws. The inventory data you upload to the platform is your property. Stockeo does not claim any rights over your data and only uses it to provide you with the Service.",
         },
       },
       {
@@ -680,8 +680,8 @@ export const ui = {
       {
         heading: { es: "7. Limitación de responsabilidad", en: "7. Limitation of liability" },
         body: {
-          es: "El Servicio se proporciona \"tal cual\" y \"según disponibilidad\", sin garantías de ningún tipo, ya sean expresas o implícitas. En la máxima medida permitida por la ley aplicable, My-Stock no será responsable por: (a) pérdidas de datos, ganancias o ingresos; (b) daños indirectos, incidentales, especiales o consecuentes; (c) interrupciones del negocio derivadas del uso o la imposibilidad de uso del Servicio; (d) acciones de terceros, incluyendo accesos no autorizados a tu cuenta. Nuestra responsabilidad total en cualquier caso no excederá el monto que hayas pagado por el Servicio en los últimos 12 meses.",
-          en: "The Service is provided \"as is\" and \"as available\", without warranties of any kind, whether express or implied. To the maximum extent permitted by applicable law, My-Stock will not be liable for: (a) loss of data, profits or revenue; (b) indirect, incidental, special or consequential damages; (c) business interruptions arising from the use or inability to use the Service; (d) actions of third parties, including unauthorized access to your account. Our total liability in any case will not exceed the amount you have paid for the Service in the last 12 months.",
+          es: "El Servicio se proporciona \"tal cual\" y \"según disponibilidad\", sin garantías de ningún tipo, ya sean expresas o implícitas. En la máxima medida permitida por la ley aplicable, Stockeo no será responsable por: (a) pérdidas de datos, ganancias o ingresos; (b) daños indirectos, incidentales, especiales o consecuentes; (c) interrupciones del negocio derivadas del uso o la imposibilidad de uso del Servicio; (d) acciones de terceros, incluyendo accesos no autorizados a tu cuenta. Nuestra responsabilidad total en cualquier caso no excederá el monto que hayas pagado por el Servicio en los últimos 12 meses.",
+          en: "The Service is provided \"as is\" and \"as available\", without warranties of any kind, whether express or implied. To the maximum extent permitted by applicable law, Stockeo will not be liable for: (a) loss of data, profits or revenue; (b) indirect, incidental, special or consequential damages; (c) business interruptions arising from the use or inability to use the Service; (d) actions of third parties, including unauthorized access to your account. Our total liability in any case will not exceed the amount you have paid for the Service in the last 12 months.",
         },
       },
       {
@@ -718,8 +718,8 @@ export const ui = {
     title: { es: "Política de privacidad", en: "Privacy policy" },
     lastUpdated: { es: "Última actualización", en: "Last updated" },
     intro: {
-      es: "En My-Stock nos tomamos tu privacidad en serio. Esta política describe qué información recopilamos, cómo la usamos, cómo la protegemos y cuáles son tus derechos. Al utilizar nuestro servicio, aceptás las prácticas descritas en esta política.",
-      en: "At My-Stock we take your privacy seriously. This policy describes what information we collect, how we use it, how we protect it and what your rights are. By using our service, you agree to the practices described in this policy.",
+      es: "En Stockeo nos tomamos tu privacidad en serio. Esta política describe qué información recopilamos, cómo la usamos, cómo la protegemos y cuáles son tus derechos. Al utilizar nuestro servicio, aceptás las prácticas descritas en esta política.",
+      en: "At Stockeo we take your privacy seriously. This policy describes what information we collect, how we use it, how we protect it and what your rights are. By using our service, you agree to the practices described in this policy.",
     },
     sections: [
       {
@@ -767,8 +767,8 @@ export const ui = {
       {
         heading: { es: "7. Cookies y almacenamiento local", en: "7. Cookies and local storage" },
         body: {
-          es: "Utilizamos las siguientes tecnologías de almacenamiento en el navegador: cookies de autenticación (mystock_token y mystock_refresh) para mantener tu sesión activa de forma segura; localStorage para recordar tu preferencia de idioma (es/en). No utilizamos cookies de rastreo, cookies de terceros ni cookies publicitarias. No implementamos herramientas de analítica de terceros como Google Analytics. Las cookies de sesión se eliminan automáticamente al cerrar sesión o al expirar.",
-          en: "We use the following browser storage technologies: authentication cookies (mystock_token and mystock_refresh) to keep your session active securely; localStorage to remember your language preference (es/en). We do not use tracking cookies, third-party cookies or advertising cookies. We do not implement third-party analytics tools such as Google Analytics. Session cookies are automatically deleted upon logout or expiration.",
+          es: "Utilizamos las siguientes tecnologías de almacenamiento en el navegador: cookies de autenticación (stockeo_token y stockeo_refresh) para mantener tu sesión activa de forma segura; localStorage para recordar tu preferencia de idioma (es/en). No utilizamos cookies de rastreo, cookies de terceros ni cookies publicitarias. No implementamos herramientas de analítica de terceros como Google Analytics. Las cookies de sesión se eliminan automáticamente al cerrar sesión o al expirar.",
+          en: "We use the following browser storage technologies: authentication cookies (stockeo_token and stockeo_refresh) to keep your session active securely; localStorage to remember your language preference (es/en). We do not use tracking cookies, third-party cookies or advertising cookies. We do not implement third-party analytics tools such as Google Analytics. Session cookies are automatically deleted upon logout or expiration.",
         },
       },
       {

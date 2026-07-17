@@ -12,7 +12,7 @@ interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-  name: "My-Stock",
+  name: "Stockeo",
   defaultLocale: "es",
   apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080",
   support: {
@@ -127,8 +127,8 @@ export const marketing = {
       en: "Control your stock in 3 clicks",
     } satisfies Localized,
     subtitle: {
-      es: "My-Stock es la forma más simple de saber qué tenés, qué te falta y qué se está por agotar. Sin planillas, sin complicaciones.",
-      en: "My-Stock is the simplest way to know what you have, what you're missing and what's running out. No spreadsheets, no hassle.",
+      es: "Stockeo es la forma más simple de saber qué tenés, qué te falta y qué se está por agotar. Sin planillas, sin complicaciones.",
+      en: "Stockeo is the simplest way to know what you have, what you're missing and what's running out. No spreadsheets, no hassle.",
     } satisfies Localized,
     ctaPrimary: { es: "Empezar gratis", en: "Start for free" },
     ctaSecondary: { es: "Ya tengo cuenta", en: "I have an account" },
