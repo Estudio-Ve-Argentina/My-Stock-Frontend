@@ -156,25 +156,7 @@ export function PlansView() {
                   >
                     {`${t(ui.plans.upgrade)} — ${formatPrice(50000)}${t(ui.plans.perYear)}`}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={loading}
-                    onClick={() => handleSubscribe("pro-test")}
-                    className="text-xs text-subtle"
-                  >
-                    Test $1
-                  </Button>
                 </>
-              )}
-              {subscriptionStatus === "PENDING" && (
-                <Button
-                  variant="primary"
-                  disabled={loading}
-                  onClick={() => handleSubscribe(currentPlanId)}
-                >
-                  {loading ? t(ui.plans.subscribing) : t(ui.plans.goToPay)}
-                </Button>
               )}
               {isPro && subscriptionStatus === "AUTHORIZED" && (
                 <>
