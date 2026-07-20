@@ -61,24 +61,26 @@ export function PlanCard({ plan, current = false, action, index = 0 }: PlanCardP
       </div>
 
       <ul className="relative flex flex-col gap-1.5 text-xs md:gap-2.5 md:text-sm">
-        {t(plan.features).map((feature) => (
-          <li key={feature} className="flex items-start gap-1.5 md:gap-2.5">
-            <span
-              className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand-dark md:h-5 md:w-5"
-            >
-              <svg className="h-2.5 w-2.5 md:h-3 md:w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="m5 13 4 4L19 7"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            {feature}
-          </li>
-        ))}
+        {[`${t(ui.plans.upTo)} ${plan.productLimit} ${t(ui.plans.productsUnit)}`, ...t(plan.features)].map(
+          (feature) => (
+            <li key={feature} className="flex items-start gap-1.5 md:gap-2.5">
+              <span
+                className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand-dark md:h-5 md:w-5"
+              >
+                <svg className="h-2.5 w-2.5 md:h-3 md:w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="m5 13 4 4L19 7"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              {feature}
+            </li>
+          ),
+        )}
       </ul>
 
       {action && <div className="relative mt-auto pt-1">{action}</div>}

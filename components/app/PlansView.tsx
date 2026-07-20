@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { appConfig, configIdFromBackend, backendPlanName, formatPrice } from "@/config/app.config";
+import { configIdFromBackend, backendPlanName, formatPrice } from "@/config/app.config";
 import type { PlanId, SubscriptionResponse } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlans } from "@/hooks/usePlans";
 import { subscribe, getSubscription, cancelSubscription } from "@/lib/api/subscriptions";
 import { resolveErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PlansComparisonTable } from "@/components/ui/PlansComparisonTable";
 import { Spinner } from "@/components/ui/Spinner";
 
@@ -50,6 +52,7 @@ function SubscriptionBadge({ status }: { status: string }) {
 export function PlansView() {
   const { t, locale } = useLanguage();
   const { user, refreshUser } = useAuth();
+  const { plans, loading: plansLoading } = usePlans();
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
@@ -58,7 +61,9 @@ export function PlansView() {
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const currentPlanId = configIdFromBackend(user?.planName ?? "FREE");
-  const currentPlan = appConfig.plans.find((p) => p.id === currentPlanId) ?? appConfig.plans[0];
+  const currentPlan = plans.find((p) => p.id === currentPlanId) ?? plans[0];
+  const monthlyPlan = plans.find((p) => p.id === "pro-monthly");
+  const annualPlan = plans.find((p) => p.id === "pro-annual");
   const isFree = currentPlanId === "free";
   const isPro = currentPlanId === "pro-monthly" || currentPlanId === "pro-annual";
   const subscriptionStatus = user?.subscriptionStatus ?? null;
@@ -105,7 +110,7 @@ export function PlansView() {
   }
 
   const periodLabel =
-    currentPlan.price === 0
+    !currentPlan || currentPlan.price === 0
       ? ""
       : currentPlan.durationDays === 365
         ? ` ${t(ui.plans.perYear)}`
@@ -124,6 +129,11 @@ export function PlansView() {
         <h2 className="font-heading text-lg font-bold text-foreground">
           {t(ui.plans.yourPlan)}
         </h2>
+        {plansLoading || !currentPlan ? (
+          <div className="flex justify-center py-10">
+            <Spinner className="text-brand" />
+          </div>
+        ) : (
         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface px-5 py-4 shadow-[0_8px_30px_-8px_rgba(22,163,74,0.12)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-0.5">
@@ -140,22 +150,26 @@ export function PlansView() {
             <div className="flex flex-wrap items-center gap-2">
               {isFree && (
                 <>
-                  <Button
-                    variant="primary"
-                    disabled={loading}
-                    onClick={() => handleSubscribe("pro-monthly")}
-                  >
-                    {loading
-                      ? t(ui.plans.subscribing)
-                      : `${t(ui.plans.upgrade)} — ${formatPrice(6499)}${t(ui.plans.perMonth)}`}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    disabled={loading}
-                    onClick={() => handleSubscribe("pro-annual")}
-                  >
-                    {`${t(ui.plans.upgrade)} — ${formatPrice(50000)}${t(ui.plans.perYear)}`}
-                  </Button>
+                  {monthlyPlan && (
+                    <Button
+                      variant="primary"
+                      disabled={loading}
+                      onClick={() => handleSubscribe("pro-monthly")}
+                    >
+                      {loading
+                        ? t(ui.plans.subscribing)
+                        : `${t(ui.plans.upgrade)} — ${formatPrice(monthlyPlan.price)}${t(ui.plans.perMonth)}`}
+                    </Button>
+                  )}
+                  {annualPlan && (
+                    <Button
+                      variant="outline"
+                      disabled={loading}
+                      onClick={() => handleSubscribe("pro-annual")}
+                    >
+                      {`${t(ui.plans.upgrade)} — ${formatPrice(annualPlan.price)}${t(ui.plans.perYear)}`}
+                    </Button>
+                  )}
                 </>
               )}
               {isPro && subscriptionStatus === "AUTHORIZED" && (
@@ -180,7 +194,7 @@ export function PlansView() {
                   )}
                 </>
               )}
-              {isPro && (subscriptionStatus === "AUTHORIZED" || subscriptionStatus === "PAUSED") && (
+              {isPro && (
                 <Button
                   variant="ghost"
                   disabled={loading}
@@ -192,32 +206,6 @@ export function PlansView() {
               )}
             </div>
           </div>
-
-          {confirmCancel && (
-            <div className="flex flex-col gap-3 rounded-xl border border-danger/20 bg-danger/5 p-4">
-              <p className="text-sm font-medium text-danger">
-                {t(ui.plans.cancelSubscriptionConfirm)}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={loading}
-                  onClick={handleCancel}
-                  className="!bg-danger hover:!bg-danger/85"
-                >
-                  {loading ? <Spinner /> : t(ui.plans.cancelSubscription)}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmCancel(false)}
-                >
-                  {t(ui.common.cancel)}
-                </Button>
-              </div>
-            </div>
-          )}
 
           {subscriptionLoaded && subscription?.nextPaymentDate && subscriptionStatus === "AUTHORIZED" && (
             <div className="border-t border-border pt-3">
@@ -243,6 +231,7 @@ export function PlansView() {
             <p className="text-sm font-medium text-danger">{planError}</p>
           )}
         </div>
+        )}
       </section>
 
       <section className="flex flex-col gap-4">
@@ -251,6 +240,17 @@ export function PlansView() {
         </h2>
         <PlansComparisonTable highlightPlanId={currentPlanId} />
       </section>
+
+      <ConfirmModal
+        open={confirmCancel}
+        title={t(ui.plans.cancelSubscription)}
+        description={t(ui.plans.cancelSubscriptionConfirm)}
+        confirmLabel={t(ui.plans.cancelSubscription)}
+        cancelLabel={t(ui.common.cancel)}
+        variant="danger"
+        onConfirm={handleCancel}
+        onCancel={() => setConfirmCancel(false)}
+      />
     </div>
   );
 }

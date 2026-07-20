@@ -29,5 +29,6 @@ export const config = {
     "/favoritos/:path*",
 "/informes/:path*",
     "/onboarding/:path*",
+    "/admin/:path*",
   ],
 };

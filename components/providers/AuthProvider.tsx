@@ -39,6 +39,7 @@ export interface SessionUser {
 export interface AuthContextValue {
   user: SessionUser | null;
   ready: boolean;
+  profileReady: boolean;
   signIn: (token: string, refreshToken: string, fallbackUsername?: string) => void;
   signOut: () => void;
   refreshUser: () => void;
@@ -76,10 +77,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
+  const [profileReady, setProfileReady] = useState(false);
   const signOutRef = useRef<() => void>(() => {});
 
   const hydrateFromBackend = useCallback((baseUser: SessionUser) => {
-    if (isMockEnabled()) return;
+    if (isMockEnabled()) {
+      setProfileReady(true);
+      return;
+    }
     fetchMe()
       .then((me) => {
         setUser((current) => {
@@ -98,7 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
         });
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setProfileReady(true));
   }, []);
 
   useEffect(() => {
@@ -123,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       writeTokenCookie(token);
       writeRefreshCookie(refreshToken);
+      setProfileReady(false);
       setUser(next);
       hydrateFromBackend(next);
     },
@@ -141,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     clearAllTokens();
     setUser(null);
+    setProfileReady(false);
     router.replace("/login");
   }, [router]);
 
@@ -153,8 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, ready, signIn, signOut, refreshUser }),
-    [user, ready, signIn, signOut, refreshUser],
+    () => ({ user, ready, profileReady, signIn, signOut, refreshUser }),
+    [user, ready, profileReady, signIn, signOut, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

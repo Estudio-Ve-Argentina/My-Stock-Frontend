@@ -1,24 +1,18 @@
 "use client";
 
-import { appConfig, formatPrice } from "@/config/app.config";
+import { formatPrice } from "@/config/app.config";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
+import { usePlans } from "@/hooks/usePlans";
 import type { Localized } from "@/config/site.types";
+import { Spinner } from "./Spinner";
 
 interface FeatureRow {
   label: Localized;
-  values: Record<string, Localized | boolean>;
+  values: Record<string, boolean>;
 }
 
 const featureRows: FeatureRow[] = [
-  {
-    label: ui.plans.products,
-    values: {
-      free: ui.plans.productsLimit,
-      "pro-monthly": ui.plans.paidProductsLimit,
-      "pro-annual": ui.plans.paidProductsLimit,
-    },
-  },
   {
     label: ui.plans.realtimeStock,
     values: { free: true, "pro-monthly": true, "pro-annual": true },
@@ -55,6 +49,19 @@ interface PlansComparisonTableProps {
 
 export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTableProps) {
   const { t } = useLanguage();
+  const { plans, loading } = usePlans();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-10">
+        <Spinner className="text-brand" />
+      </div>
+    );
+  }
+
+  if (plans.length === 0) {
+    return null;
+  }
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-[0_8px_30px_-8px_rgba(22,163,74,0.12)]">
@@ -64,7 +71,7 @@ export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTablePr
             <th className="border-r border-border/50 px-5 py-4 text-left font-heading text-base font-semibold uppercase tracking-wider text-subtle">
               {t(ui.plans.feature)}
             </th>
-            {appConfig.plans.map((plan) => (
+            {plans.map((plan) => (
               <th
                 key={plan.id}
                 className={`border-r border-border/50 px-5 py-4 text-center font-heading text-base font-semibold last:border-r-0 ${
@@ -82,6 +89,23 @@ export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTablePr
           </tr>
         </thead>
         <tbody>
+          <tr className="border-b border-border/50 transition-colors hover:bg-muted/30">
+            <td className="border-r border-border/50 px-5 py-3.5 font-heading text-base font-medium text-foreground">
+              {t(ui.plans.products)}
+            </td>
+            {plans.map((plan) => (
+              <td
+                key={plan.id}
+                className={`border-r border-border/50 px-5 py-3.5 text-center last:border-r-0 ${
+                  plan.id === highlightPlanId ? "bg-brand-soft/10" : ""
+                }`}
+              >
+                <span className="text-base font-medium text-foreground">
+                  {t(ui.plans.upTo)} {plan.productLimit}
+                </span>
+              </td>
+            ))}
+          </tr>
           {featureRows.map((row, index) => (
             <tr
               key={index}
@@ -92,7 +116,7 @@ export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTablePr
               <td className="border-r border-border/50 px-5 py-3.5 font-heading text-base font-medium text-foreground">
                 {t(row.label)}
               </td>
-              {appConfig.plans.map((plan) => {
+              {plans.map((plan) => {
                 const value = row.values[plan.id];
                 return (
                   <td
@@ -101,15 +125,9 @@ export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTablePr
                       plan.id === highlightPlanId ? "bg-brand-soft/10" : ""
                     }`}
                   >
-                    {typeof value === "boolean" ? (
-                      <span className="inline-flex justify-center">
-                        {value ? <CheckIcon /> : <CrossIcon />}
-                      </span>
-                    ) : (
-                      <span className="text-base font-medium text-foreground">
-                        {t(value as Localized)}
-                      </span>
-                    )}
+                    <span className="inline-flex justify-center">
+                      {value ? <CheckIcon /> : <CrossIcon />}
+                    </span>
                   </td>
                 );
               })}
@@ -119,7 +137,7 @@ export function PlansComparisonTable({ highlightPlanId }: PlansComparisonTablePr
             <td className="border-r border-border/50 px-5 py-4 font-heading text-base font-semibold uppercase tracking-wider text-subtle">
               {t(ui.plans.price)}
             </td>
-            {appConfig.plans.map((plan) => {
+            {plans.map((plan) => {
               const period =
                 plan.price === 0
                   ? ""

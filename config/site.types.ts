@@ -23,7 +23,7 @@ export interface AuthResponse {
   status: boolean;
 }
 
-export type SubscriptionStatus = "PENDING" | "AUTHORIZED" | "PAUSED";
+export type SubscriptionStatus = "PENDING" | "AUTHORIZED" | "PAUSED" | "CANCELLED";
 
 export interface UserMeResponse {
   id: number;
@@ -192,4 +192,53 @@ export interface PlanResponse {
   maxProducts: number;
   price: number;
   durationDays: number;
+}
+
+export interface PlanRequest {
+  name: string;
+  maxProducts: number;
+  price: number;
+  durationDays: number;
+}
+
+export interface AdminStatsResponse {
+  totalUsers: number;
+  activeSubscriptions: number;
+  usersByPlan: Record<string, number>;
+  mrr: number;
+}
+
+export interface AdminSubscriptionResponse {
+  id: number;
+  mpPreapprovalId: string | null;
+  status: SubscriptionStatus;
+  planName: string;
+  userEmail: string;
+  userName: string;
+  nextPaymentDate: string | null;
+  createdAt: string;
+}
+
+export interface AssignPlanRequest {
+  planId: number;
+  durationDays?: number;
+}
+
+export interface UserEntityResponse {
+  id: number;
+  name: string;
+  lastName: string;
+  username: string;
+  email?: string;
+  planName: string;
+  planExpiresAt: string | null;
+  autoRenew: boolean;
+  subscriptionStatus: SubscriptionStatus | null;
+}
+
+export interface UserSaveRequest {
+  name: string;
+  lastName: string;
+  username: string;
+  password: string;
 }

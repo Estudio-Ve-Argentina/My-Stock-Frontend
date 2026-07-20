@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ui } from "@/config/i18n";
-import { appConfig, backendPlanName } from "@/config/app.config";
+import { backendPlanName } from "@/config/app.config";
 import type { PlanId } from "@/config/site.types";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { usePlans } from "@/hooks/usePlans";
 import { updateProfile } from "@/lib/api/user";
 import { subscribe } from "@/lib/api/subscriptions";
 import { resolveErrorMessage } from "@/lib/error-utils";
@@ -28,6 +29,7 @@ const stepVariants = {
 export function OnboardingView() {
   const { t } = useLanguage();
   const { user, refreshUser } = useAuth();
+  const { plans } = usePlans();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -176,7 +178,7 @@ export function OnboardingView() {
             </div>
 
             <div className="grid gap-3">
-              {appConfig.plans.map((plan, index) => (
+              {plans.map((plan, index) => (
                 <button
                   key={plan.id}
                   type="button"

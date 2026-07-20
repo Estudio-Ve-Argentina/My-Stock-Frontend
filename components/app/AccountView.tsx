@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { appConfig, configIdFromBackend } from "@/config/app.config";
+import { PLAN_PRESENTATION, configIdFromBackend } from "@/config/app.config";
 import type { SubscriptionStatus } from "@/config/site.types";
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -217,8 +217,7 @@ export function AccountView() {
   const { products } = useProducts(user?.username);
 
   const planConfigId = configIdFromBackend(user?.planName ?? "FREE");
-  const planConfig = appConfig.plans.find((p) => p.id === planConfigId) ?? appConfig.plans[0];
-  const planLabel = t(planConfig.name);
+  const planLabel = t(PLAN_PRESENTATION[planConfigId].name);
   const activeCount = products.filter((p) => p.active).length;
   const usage =
     user?.maxProducts === null || user?.maxProducts === undefined

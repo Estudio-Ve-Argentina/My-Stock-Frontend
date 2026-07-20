@@ -1,4 +1,4 @@
-import type { Locale, Localized, Plan, PlanId } from "./site.types";
+import type { Locale, Localized, PlanId } from "./site.types";
 
 interface AppConfig {
   name: string;
@@ -8,7 +8,6 @@ interface AppConfig {
     whatsapp: string;
     site: string;
   };
-  plans: Plan[];
 }
 
 export const appConfig: AppConfig = {
@@ -19,78 +18,68 @@ export const appConfig: AppConfig = {
     whatsapp: "+5492236680996",
     site: "estudiove.ar",
   },
-  plans: [
-    {
-      id: "free",
-      name: { es: "Gratis", en: "Free" },
-      price: 0,
-      productLimit: 10,
-      durationDays: 0,
-      features: {
-        es: [
-          "Hasta 10 productos",
-          "Control de stock en tiempo real",
-          "Historial de movimientos",
-        ],
-        en: [
-          "Up to 10 products",
-          "Real-time stock control",
-          "Movement history",
-        ],
-      },
-    },
-    {
-      id: "pro-monthly",
-      name: { es: "Pro Mensual", en: "Pro Monthly" },
-      price: 6499,
-      productLimit: 120,
-      durationDays: 30,
-      features: {
-        es: [
-          "Hasta 120 productos",
-          "Control de stock en tiempo real",
-          "Historial de movimientos",
-          "Soporte prioritario",
-        ],
-        en: [
-          "Up to 120 products",
-          "Real-time stock control",
-          "Movement history",
-          "Priority support",
-        ],
-      },
-    },
-    {
-      id: "pro-annual",
-      name: { es: "Pro Anual", en: "Pro Annual" },
-      price: 50000,
-      productLimit: 120,
-      durationDays: 365,
-      features: {
-        es: [
-          "Hasta 120 productos",
-          "Control de stock en tiempo real",
-          "Historial de movimientos",
-          "Soporte prioritario",
-        ],
-        en: [
-          "Up to 120 products",
-          "Real-time stock control",
-          "Movement history",
-          "Priority support",
-        ],
-      },
-    },
-  ],
 };
 
-export function planById(id: Plan["id"]): Plan {
-  const plan = appConfig.plans.find((candidate) => candidate.id === id);
-  if (!plan) {
-    throw new Error(`Unknown plan: ${id}`);
-  }
-  return plan;
+interface PlanPresentation {
+  name: Localized;
+  features: Localized<string[]>;
 }
+
+/**
+ * Copy que el backend no devuelve (nombre visible, bullets de marketing).
+ * Precio, límite de productos y duración siempre vienen de `GET /api/plans` vía `usePlans()`.
+ */
+export const PLAN_PRESENTATION: Record<PlanId, PlanPresentation> = {
+  free: {
+    name: { es: "Gratis", en: "Free" },
+    features: {
+      es: [
+        "Control de stock en tiempo real",
+        "Historial de movimientos",
+      ],
+      en: [
+        "Real-time stock control",
+        "Movement history",
+      ],
+    },
+  },
+  "pro-monthly": {
+    name: { es: "Pro Mensual", en: "Pro Monthly" },
+    features: {
+      es: [
+        "Control de stock en tiempo real",
+        "Historial de movimientos",
+        "Soporte prioritario",
+      ],
+      en: [
+        "Real-time stock control",
+        "Movement history",
+        "Priority support",
+      ],
+    },
+  },
+  "pro-annual": {
+    name: { es: "Pro Anual", en: "Pro Annual" },
+    features: {
+      es: [
+        "Control de stock en tiempo real",
+        "Historial de movimientos",
+        "Soporte prioritario",
+      ],
+      en: [
+        "Real-time stock control",
+        "Movement history",
+        "Priority support",
+      ],
+    },
+  },
+  "pro-test": {
+    name: { es: "Pro Test", en: "Pro Test" },
+    features: { es: [], en: [] },
+  },
+};
+
+export const PLAN_ORDER: PlanId[] = ["free", "pro-monthly", "pro-annual", "pro-test"];
 
 const BACKEND_PLAN_MAP: Record<string, PlanId> = {
   FREE: "free",
