@@ -3,6 +3,7 @@
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { marketing } from "@/config/app.config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 import { LinkButton } from "@/components/ui/Button";
 
 const container: Variants = {
@@ -33,6 +34,8 @@ function stockTone(stock: number): string {
 export function MarketingHero() {
   const { t } = useLanguage();
   const reduceMotion = useReducedMotion();
+  const { user, ready } = useAuth();
+  const isLoggedIn = ready && !!user;
   const { hero } = marketing;
 
   return (
@@ -67,10 +70,10 @@ export function MarketingHero() {
           </motion.p>
 
           <motion.div variants={item} className="mt-8 flex flex-row gap-3">
-            <LinkButton href="/signup" variant="primary" size="md">
+            <LinkButton href={isLoggedIn ? "/panel" : "/signup"} variant="primary" size="md">
               {t(hero.ctaPrimary)}
             </LinkButton>
-            <LinkButton href="/login" variant="outline" size="md">
+            <LinkButton href={isLoggedIn ? "/panel" : "/login"} variant="outline" size="md">
               {t(hero.ctaSecondary)}
             </LinkButton>
           </motion.div>

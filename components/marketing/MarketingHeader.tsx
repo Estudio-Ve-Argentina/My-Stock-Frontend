@@ -2,12 +2,15 @@
 
 import { ui } from "@/config/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { LinkButton } from "@/components/ui/Button";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 
 export function MarketingHeader() {
   const { t } = useLanguage();
+  const { user, ready } = useAuth();
+  const isLoggedIn = ready && !!user;
 
   return (
     <header className="sticky top-0 z-30 bg-muted">
@@ -15,12 +18,20 @@ export function MarketingHeader() {
         <Wordmark />
         <div className="flex items-center gap-3">
           <LanguageToggle />
-          <LinkButton href="/login" variant="outline" size="sm">
-            {t(ui.auth.loginCta)}
-          </LinkButton>
-          <LinkButton href="/signup" variant="primary" size="sm">
-            {t(ui.auth.goSignup)}
-          </LinkButton>
+          {isLoggedIn ? (
+            <LinkButton href="/panel" variant="primary" size="sm">
+              {t(ui.onboarding.goToPanel)}
+            </LinkButton>
+          ) : (
+            <>
+              <LinkButton href="/login" variant="outline" size="sm">
+                {t(ui.auth.loginCta)}
+              </LinkButton>
+              <LinkButton href="/signup" variant="primary" size="sm">
+                {t(ui.auth.goSignup)}
+              </LinkButton>
+            </>
+          )}
         </div>
       </div>
       <div className="h-[3px] bg-gradient-to-r from-brand via-accent to-brown/40" />
