@@ -81,6 +81,9 @@ export const PLAN_PRESENTATION: Record<PlanId, PlanPresentation> = {
 
 export const PLAN_ORDER: PlanId[] = ["free", "pro-monthly", "pro-annual", "pro-test"];
 
+// Planes que existen en el backend pero no se ofrecen públicamente (ej. cuentas de prueba puntuales).
+export const HIDDEN_PLAN_IDS: PlanId[] = ["pro-test"];
+
 const BACKEND_PLAN_MAP: Record<string, PlanId> = {
   FREE: "free",
   PRO_MONTHLY: "pro-monthly",

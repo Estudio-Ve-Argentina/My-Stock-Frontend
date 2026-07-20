@@ -52,7 +52,7 @@ function SubscriptionBadge({ status }: { status: string }) {
 export function PlansView() {
   const { t, locale } = useLanguage();
   const { user, refreshUser } = useAuth();
-  const { plans, loading: plansLoading } = usePlans();
+  const { plans, loading: plansLoading } = usePlans({ includeHidden: true });
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);

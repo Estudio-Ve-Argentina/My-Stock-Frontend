@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PLAN_ORDER, PLAN_PRESENTATION, configIdFromBackend } from "@/config/app.config";
+import { HIDDEN_PLAN_IDS, PLAN_ORDER, PLAN_PRESENTATION, configIdFromBackend } from "@/config/app.config";
 import type { Plan } from "@/config/site.types";
 import { listPlans } from "@/lib/api/plans";
 
@@ -11,7 +11,12 @@ interface PlansState {
   error: boolean;
 }
 
-export function usePlans() {
+interface UsePlansOptions {
+  includeHidden?: boolean;
+}
+
+export function usePlans(options: UsePlansOptions = {}) {
+  const { includeHidden = false } = options;
   const [state, setState] = useState<PlansState>({ plans: [], loading: true, error: false });
 
   useEffect(() => {
@@ -24,6 +29,7 @@ export function usePlans() {
             const id = configIdFromBackend(backendPlan.name);
             const presentation = PLAN_PRESENTATION[id];
             if (!presentation) return null;
+            if (!includeHidden && HIDDEN_PLAN_IDS.includes(id)) return null;
             return {
               id,
               name: presentation.name,
@@ -43,7 +49,7 @@ export function usePlans() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [includeHidden]);
 
   return state;
 }
